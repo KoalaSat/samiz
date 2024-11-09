@@ -1,8 +1,7 @@
 # Samiz
 
 ## Use cases
-Case A
-
+###Case A
 Alice sits in her garden and wants to share with everyone how great everything is going with a nostr note. Unfortunately, Alice's internet connection is facing technical difficulties, so she cannot share her happiness with her network.
 
 1. Alice starts a new session with Samiz and creates the nostr note with her favorite nostr client.
