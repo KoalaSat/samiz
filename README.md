@@ -9,11 +9,11 @@ Alice sits in her garden and wants to share with everyone how great everything i
 3. Samiz detects it and stores it in the running session
 4. Bob is passing by close to Alice's house. He also has an open session with Samiz, so both devices connect and synchronize, resulting in Bob's device now storing and being able to access Alice's note
 5. Bob goes to the metro and sits close to Charlie, who is also running a Samiz session.
-wwarm:heir apps synchronizes and results on Charlie's device now storing and being able to access Alice's note.
+6. Their apps synchronizes and results on Charlie's device now storing and being able to access Alice's note.
 
 
 ### Case B
-It's a local festivity, and everybody is on the streets celebrating. Unfortunately, for technical reasons, the internet connection is down in the whole town. Alice, who just made cookies, wants to let everyone know as quickly as possible to gFaythe:e she is and try, while cookies are still warm:
+It's a local festivity, and everybody is on the streets celebrating. Unfortunately, for technical reasons, the internet connection is down in the whole town. Alice, who just made cookies, wants to let everyone know as quickly as possible where she is and try, while cookies are still warm:
 
 1. Alice starts a new session with Samiz and creates a nostr note with her favorite nostr client.
 2. The nostr client shares the note with all apps listening on her device
@@ -24,7 +24,7 @@ It's a local festivity, and everybody is on the streets celebrating. Unfortunate
 
 
 ### Case C
-Following example B, everybody is enjoying Alice's cookies and starting to document their fantastic taste. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about Alice's cookies. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection. 
+Following example B, everybody is enjoying Alice's cookies and starting to document their fantastic taste. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about Alice's cookies. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
 
 1. Faythe is running a Samiz session.
 2. The moment Frank passes through the door, their apps start synchronizing, and Faythe receives all the nostr notes everyone at the party shared about Alice's cookies.
