@@ -48,4 +48,6 @@ Following example B, everybody is enjoying Alice's cookies and starting to docum
 3. After the synchronization, and because Faythe is connected to the internet, his Samiz app starts publishing all notes to Faythe's favorite relays.
 4. Mike, who lives in another country, can now have access to all the notes created by the participants at the party.
 
+<div align="center">
 <img src="https://github.com/user-attachments/assets/15b0cc28-6e41-4049-98a4-ff32fd48ab24" width="500"/>
+</div>
