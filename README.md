@@ -8,7 +8,7 @@ Alice sits in her garden and wants to share with everyone how great everything i
 </div>
 
 1. Alice starts a new session with Samiz and creates the nostr note with her favorite nostr client.
-2. The nostr client shares the note with all apps listening on her device.
+2. The nostr client shares the note with all apps listening on her device and/or register it on a local relay.
 3. Samiz detects it and stores it in the running session
 4. Bob is passing by close to Alice's house. He also has an open session with Samiz, so both devices connect and synchronize, resulting in Bob's device now storing and being able to access Alice's note
 5. Bob goes to the metro and sits close to Charlie, who is also running a Samiz session.
@@ -26,7 +26,7 @@ It's a local festivity, and everybody is on the streets celebrating. Unfortunate
 </div>
 
 1. Alice starts a new session with Samiz and creates a nostr note with her favorite nostr client.
-2. The nostr client shares the note with all apps listening on her device
+2. The nostr client shares the note with all apps listening on her device and/or register it on a local relay.
 3. Samiz detects it and stores it in the running session
 4. Bob and Charlie are close to Alice with a running Samiz session, so their devices synchronize and receive Alice's nostr event.
 5. Frank and Eve, who are also running a Samiz session, are far from Alice but close to Bob.
