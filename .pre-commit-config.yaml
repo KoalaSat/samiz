@@ -1,0 +1,22 @@
+repos:
+  - repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    rev: v4.5.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: mixed-line-ending
+        args:
+          - '--fix=lf'
+      - id: trailing-whitespace
+      - id: check-builtin-literals
+      - id: check-docstring-first
+  - repo: local
+    hooks:
+      - id: ktlint-check
+        name: Run ktlintCheck
+        entry: ./gradlew ktlintCheck
+        language: system
+        types: []  # This can be left empty if you want it to run for all file types
+        pass_filenames: false
+

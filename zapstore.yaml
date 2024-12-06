@@ -1,0 +1,11 @@
+pokey:
+  android:
+    identifier: com.koalasat.samiz
+    name: Samiz
+    description: Nostr pull notifications on Android. Receive live notifications for your nostr events and allow other apps to receive and interact with them.
+    repository: https://github.com/koalasat/samiz
+    license: MIT
+    artifacts:
+      - samiz-universal-v%v-alpha.apk
+      - samiz-arm64-v8a-v%v-alpha.apk
+      - samiz-armeabi-v7a-v%v-alpha.apk
