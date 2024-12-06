@@ -44,7 +44,7 @@ Following example B, everybody is enjoying and starting to document the event, u
 </div>
 
 1. Faythe is running a Samiz session.
-2. The moment Frank passes through the door, their apps start synchronizing, and Faythe receives all the nostr notes everyone at the party shared about Alice's cookies.
+2. The moment Frank enters the house, their apps start synchronizing and Faythe receives all the nostr notes everyone at the party shared about Alice's cookies.
 3. After the synchronization, and because Faythe is connected to the internet, his Samiz app starts publishing all notes to Faythe's favorite relays.
 4. Mike, who lives in another country, can now have access to all the notes created by the participants at the party.
 
