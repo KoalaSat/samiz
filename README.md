@@ -19,7 +19,7 @@ Alice sits in her garden and wants to share with everyone how great everything i
 </div>
 
 ### Case B
-It's a local festivity, and everybody is on the streets celebrating. Unfortunately, for technical reasons, the internet connection is down in the whole town. Alice, who just made cookies, wants to let everyone know as quickly as possible where she is and try, while cookies are still warm:
+It's a local festivity, and everybody is on the streets celebrating. Unfortunately, for technical reasons, the internet connection is down in the whole town. Alice, who just made cookies, wants to let everyone know as quickly as possible:
 
 <div align="center">
 <img src="https://github.com/user-attachments/assets/fb7ae48a-ac99-4a4f-a158-803f0e1641f3" width="500"/>
@@ -37,7 +37,7 @@ It's a local festivity, and everybody is on the streets celebrating. Unfortunate
 </div>
 
 ### Case C
-Following example B, everybody is enjoying Alice's cookies and starting to document their fantastic taste, using Samiz on the background to share notes to each other. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about Alice's cookies. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
+Following example B, everybody is enjoying and starting to document the event, using Samiz on the background to share notes to each other. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about it. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
 
 <div align="center">
 <img src="https://github.com/user-attachments/assets/8adfcb16-1343-42be-bf35-fdc152b136c5" width="500"/>
