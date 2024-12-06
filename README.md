@@ -10,9 +10,9 @@ Alice sits in her garden and wants to share with everyone how great everything i
 1. Alice starts a new session with Samiz and creates the nostr note with her favorite nostr client.
 2. The nostr client shares the note with all apps listening on her device and/or register it on a local relay.
 3. Samiz detects the note and stores it in the running session
-4. Bob is passing by close to Alice's house. He also has an open session with Samiz, so both devices connect and synchronize, resulting in Bob's device now storing and being able to access Alice's note
+4. Bob is passing by close to Alice's house. He also has an open session with Samiz, so both devices automatically connect and synchronize, resulting in Bob's device now storing and being able to access Alice's note
 5. Bob goes to the metro and sits close to Charlie, who is also running a Samiz session.
-6. Their apps synchronizes and results on Charlie's device now storing and being able to access Alice's note.
+6. Their apps automatically synchronizes and results on Charlie's device now storing and being able to access Alice's note.
 
 <div align="center">
 <img src="https://github.com/user-attachments/assets/e9fb7b4c-2a0e-43bb-8285-16877736118d" width="500"/>
@@ -28,16 +28,16 @@ It's a local festivity, and everybody is on the streets celebrating. Unfortunate
 1. Alice starts a new session with Samiz and creates a nostr note with her favorite nostr client.
 2. The nostr client shares the note with all apps listening on her device and/or register it on a local relay.
 3. Samiz detects the note and stores it in the running session
-4. Bob and Charlie are close to Alice with a running Samiz session, so their devices synchronize and receive Alice's nostr event.
+4. Bob and Charlie are close to Alice with a running Samiz session, so their devices automatically synchronize and receive Alice's nostr event.
 5. Frank and Eve, who are also running a Samiz session, are far from Alice but close to Bob.
-6. After Bob synchronized with Alice, his session synchronizes now with Frank and Eve's, allowing them to receive and read Alice's note.
+6. After Bob synchronized with Alice, his session automatically synchronizes with Frank and Eve's, allowing them to receive and read Alice's note.
 
 <div align="center">
 <img src="https://github.com/user-attachments/assets/2aa39fd8-e3ea-4a1c-999f-836b62b61d3f" width="500"/>
 </div>
 
 ### Case C
-Following example B, everybody is enjoying Alice's cookies and starting to document their fantastic taste. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about Alice's cookies. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
+Following example B, everybody is enjoying Alice's cookies and starting to document their fantastic taste, using Samiz on the background to share notes to each other. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about Alice's cookies. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
 
 <div align="center">
 <img src="https://github.com/user-attachments/assets/8adfcb16-1343-42be-bf35-fdc152b136c5" width="500"/>
