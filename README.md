@@ -37,11 +37,13 @@ It's a local festivity, and everybody is on the streets celebrating. Unfortunate
 </div>
 
 ### Case C
-Following example B, everybody is enjoying and starting to document the event, using Samiz on the background to share notes to each other. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about it. Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
+Following example B, everybody is enjoying and starting to document the event, using Samiz on the background to share notes to each other. Unfortunately, the internet connection is still facing technical difficulties and no one outside the town can hear about it.
 
 <div align="center">
 <img src="https://github.com/user-attachments/assets/8adfcb16-1343-42be-bf35-fdc152b136c5" width="500"/>
 </div>
+
+Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satellite internet connection:
 
 1. Faythe is running a Samiz session.
 2. The moment Frank enters the house, their apps automatically start synchronizing and Faythe receives all the nostr notes received by Bob while he was at the party.
