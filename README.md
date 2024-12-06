@@ -4,7 +4,7 @@
 [![release](https://img.shields.io/github/v/release/KoalaSat/samiz)](https://github.com/KoalaSat/samiz/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/KoalaSat/samiz/blob/main/LICENSE)
 
- Display live notifications for your nostr events and allow other apps to receive and interact with them.
+ Create a Bluethoot mesh with your Android device and use nostr without accessing to the internet.
 
 <div align="center">
     <img src="./app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Description of Image" />
