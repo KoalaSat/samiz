@@ -1,5 +1,28 @@
 # Samiz
 
+[![GitHub downloads](https://img.shields.io/github/downloads/KoalaSat/samiz/total?label=Downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/KoalaSat/samiz/releases)
+[![release](https://img.shields.io/github/v/release/KoalaSat/samiz)](https://github.com/KoalaSat/samiz/releases)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/KoalaSat/samiz/blob/main/LICENSE)
+
+ Display live notifications for your nostr events and allow other apps to receive and interact with them.
+
+<div align="center">
+    <img src="./app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Description of Image" />
+</div>
+<div align="center">
+    <a href="https://github.com/ImranR98/Obtainium" target="_blank">
+        <img src="./docs/obtainium.png" alt="Get it on Obtaininum" height="70" />
+    </a>
+<!--     <a src="https://github.com/zapstore/zapstore-cli" target="_blank">
+        <img src="./docs/obtainium.png alt="Get it on Zap.Store" height="70" />
+    </a> -->
+    <a href="https://github.com/KoalaSat/samiz/releases" target="_blank">
+        <img src="https://github.com/machiav3lli/oandbackupx/raw/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" alt="Get it on GitHub" height="70">
+    </a>
+</div>
+
+- Discussion: https://chachi.chat/groups.0xchat.com/7SbVsYrEQMtZAMIn
+
 ## Use cases
 ### Case A
 Alice sits in her garden and wants to share with everyone her thoughs with a nostr note. Unfortunately, Alice's internet connection is facing technical difficulties, so she cannot share her thoughts with her network:
