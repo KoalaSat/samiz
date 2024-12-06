@@ -2,7 +2,8 @@
 
 ## Use cases
 ### Case A
-Alice sits in her garden and wants to share with everyone how great everything is going with a nostr note. Unfortunately, Alice's internet connection is facing technical difficulties, so she cannot share her thoughts with her network:
+Alice sits in her garden and wants to share with everyone her thoughs with a nostr note. Unfortunately, Alice's internet connection is facing technical difficulties, so she cannot share her thoughts with her network:
+
 <div align="center">
 <img src="https://github.com/user-attachments/assets/9f2e8179-d2af-423a-bde9-ce26e979e16c" width="500"/>
 </div>
