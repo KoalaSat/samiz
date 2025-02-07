@@ -12,9 +12,10 @@ lifecycleLivedataKtx = "2.8.7"
 lifecycleViewmodelKtx = "2.8.7"
 navigationFragmentKtx = "2.8.3"
 navigationUiKtx = "2.8.3"
-rxandroidble = "1.12.1"
+rxandroidble = "1.19.0"
 rxjava = "2.2.19"
 rxandroid = "2.1.1"
+rxkotlin = "2.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,8 +29,9 @@ androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecy
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
-rxandroidble = { module = "com.polidea.rxandroidble2:rxandroidble", version.ref = "rxandroidble" }
+rxandroidble = { module = "com.polidea.rxandroidble3:rxandroidble", version.ref = "rxandroidble" }
 rxjava = { module = "io.reactivex.rxjava2:rxjava", version.ref = "rxjava" }
+rxkotlin = { group = "io.reactivex.rxjava2", name = "rxkotlin", version.ref = "rxkotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

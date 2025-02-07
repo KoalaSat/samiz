@@ -3,4 +3,8 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="permissions_required">The app requires permissions to work</string>
+    <string name="service">Service</string>
+    <string name="samiz_is_running_in_background">Samiz is running in background</string>
+    <string name="sync_service">Sync Service</string>
 </resources>
