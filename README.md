@@ -21,7 +21,7 @@ Create a Bluetooth mesh with your Android device and use Nostr without accessing
     </a>
 </div>
 
-- Discussion: https://chachi.chat/groups.0xchat.com/7SbVsYrEQMtZAMIn
+- Discussion: https://chachi.chat/groups.0xchat.com/Ofar1AYHvG12Y1jx
 
 ## Use cases
 ### Case A
