@@ -4,7 +4,7 @@
 [![release](https://img.shields.io/github/v/release/KoalaSat/samiz)](https://github.com/KoalaSat/samiz/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/KoalaSat/samiz/blob/main/LICENSE)
 
- Create a Bluethoot mesh with your Android device and use nostr without accessing to the internet.
+Create a Bluetooth mesh with your Android device and use Nostr without accessing the internet.
 
 <div align="center">
     <img src="./app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Description of Image" />
