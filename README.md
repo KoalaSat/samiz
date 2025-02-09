@@ -77,3 +77,11 @@ Frank leaves the party earlier to visit Faythe, a tech enthusiast, who has satel
 <div align="center">
 <img src="https://github.com/user-attachments/assets/15b0cc28-6e41-4049-98a4-ff32fd48ab24" width="500"/>
 </div>
+
+# Sponsors
+
+<div align="center">
+    <a href="https://opensats.org" target="_blank">
+        <img src="./docs/opensats_logo.png" alt="Get it on Obtaininum" />
+    </a>
+</div>
