@@ -6,31 +6,11 @@ import java.util.zip.DeflaterOutputStream
 
 class Compression {
     companion object {
-        fun compressByteArray(byteArray: ByteArray): ByteArray {
-            val bos = ByteArrayOutputStream()
-            val dos = DeflaterOutputStream(bos)
-            dos.write(byteArray)
-            dos.close()
-            return bos.toByteArray()
-        }
-
-        fun decompressByteArray(byteArray: ByteArray): ByteArray {
-            val bis = ByteArrayInputStream(byteArray)
-            val bos = ByteArrayOutputStream()
-            val dis = java.util.zip.InflaterInputStream(bis)
-            val buffer = ByteArray(1024)
-            var len: Int
-            while (dis.read(buffer).also { len = it } != -1) {
-                bos.write(buffer, 0, len)
-            }
-            dis.close()
-            return bos.toByteArray()
-        }
-
-        fun splitInChunks(byteArray: ByteArray): Array<ByteArray> {
+        fun splitInChunks(message: ByteArray): Array<ByteArray> {
             val chunkSize = 512 // define the chunk size
-            val numChunks = (byteArray.size + chunkSize - 1) / chunkSize // calculate the number of chunks
 
+            var byteArray = compressByteArray(message)
+            val numChunks = (byteArray.size + chunkSize - 1) / chunkSize // calculate the number of chunks
             var chunkIndex = 0
             val chunks = Array(numChunks) { ByteArray(0) }
 
@@ -67,7 +47,35 @@ class Compression {
                 reassembledByteArray = reassembledByteArray.copyOf(reassembledByteArray.size + chunkData.size)
                 chunkData.copyInto(reassembledByteArray, reassembledByteArray.size - chunkData.size)
             }
-            return reassembledByteArray
+            return decompressByteArray(reassembledByteArray)
+        }
+
+
+        private fun compressByteArray(byteArray: ByteArray): ByteArray {
+            if (byteArray.isEmpty()) {
+                return byteArray
+            }
+            val bos = ByteArrayOutputStream()
+            val dos = DeflaterOutputStream(bos)
+            dos.write(byteArray)
+            dos.close()
+            return bos.toByteArray()
+        }
+
+        private fun decompressByteArray(byteArray: ByteArray): ByteArray {
+            if (byteArray.isEmpty()) {
+                return byteArray
+            }
+            val bis = ByteArrayInputStream(byteArray)
+            val bos = ByteArrayOutputStream()
+            val dis = java.util.zip.InflaterInputStream(bis)
+            val buffer = ByteArray(1024)
+            var len: Int
+            while (dis.read(buffer).also { len = it } != -1) {
+                bos.write(buffer, 0, len)
+            }
+            dis.close()
+            return bos.toByteArray()
         }
     }
 }

@@ -8,14 +8,15 @@ import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothGattService
 import android.util.Log
-import com.koalasat.samiz.util.Compression.Companion.compressByteArray
+import com.koalasat.samiz.util.Compression.Companion.joinChunks
 import com.koalasat.samiz.util.Compression.Companion.splitInChunks
-import java.nio.charset.Charset
 import kotlin.collections.set
 
 class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
     private lateinit var bluetoothGattServer: BluetoothGattServer
-    private var outputReadMessages = HashMap<String, Array<ByteArray>>()
+    private var initialMessages = HashMap<String, Array<ByteArray>>()
+    private var reconciliationMessages = HashMap<String, Array<ByteArray>>()
+    private var eventMessages = HashMap<String, Array<ByteArray>>()
 
     @SuppressLint("MissingPermission")
     fun createGattServer() {
@@ -37,33 +38,11 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
                         characteristic: BluetoothGattCharacteristic,
                     ) {
                         super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+                        Log.d("BluetoothBleServer", "${device.address} - Read request")
                         if (characteristic.uuid.equals(bluetoothBle.characteristicUUID)) {
-                            val jsonBytes =
-                                if (outputReadMessages.containsKey(device.address)) {
-                                    outputReadMessages.getOrDefault(device.address, emptyArray())
-                                } else {
-                                    var message = "{\"id\":\"4376c65d2f232afbe9b882a35baa4f6fe8667c4e684749af565f981833ed6a65\",\"pubkey\":\"6e468422dfb74a5738702a8823b9b28168abab8655faacb6853cd0ee15deee93\",\"created_at\":1673347337,\"kind\":1,\"tags\":[[\"e\",\"3da979448d9ba263864c4d6f14984c423a3838364ec255f03c7904b1ae77f206\"],[\"p\",\"bf2376e17ba4ec269d10fcc996a4746b451152be9031fa48e74553dde5526bce\"]],\"content\":\"Walledgardensbecameprisons,andnostristhefirststeptowardstearingdowntheprisonwalls.\",\"sig\":\"908a15e46fb4d8675bab026fc230a0e3542bfade63da02d542fb78b2a8513fcd0092619a2c8c1221e581946e0191f2af505dfdf8657a414dbca329186f009262\"}"
-                                    var compressedData = compressByteArray(message.toByteArray(Charset.forName("UTF-8")))
-                                    var chunks = splitInChunks(compressedData)
-
-                                    Log.d("BluetoothBleServer", "${device.address} - Created ${chunks.size} chunks")
-                                    chunks
-                                }
-
-                            if (jsonBytes.isNotEmpty()) {
-                                Log.d("BluetoothBleServer", "${device.address} - Sending Chunk ${jsonBytes.size}")
-                                val nextChunk = jsonBytes.first()
-                                outputReadMessages[device.address] = jsonBytes.copyOfRange(1, jsonBytes.size)
-
-                                sendData(device, requestId, characteristic, nextChunk)
-
-                                val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
-                                if (isLastChunk) {
-                                    Log.d("BluetoothBleServer", "${device.address} - Last chunk sent")
-                                    outputReadMessages.remove(device.address)
-                                }
-                            }
+                            sendInitialMessage(device, requestId, characteristic)
                         } else {
+                            Log.e("BluetoothBleServer", "${device.address} - Read not permitted")
                             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_READ_NOT_PERMITTED, offset, null)
                         }
                     }
@@ -86,20 +65,20 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
                             offset,
                             value,
                         )
-                        // Get the value of the characteristic
-                        val message = String(value)
-
                         Log.d(
                             "BluetoothBleServer",
-                            "${device.address} - Write request from ${device.name} : $message",
+                            "${device.address} - Write request",
                         )
+                        // Get the value of the characteristic
+                        processReconciliationMessage(device, characteristic, value)
+                        processEvent(device, characteristic, value)
                     }
                 },
             )
     }
 
     @SuppressLint("MissingPermission")
-    private fun sendData(
+    private fun sendReadData(
         device: BluetoothDevice,
         requestId: Int,
         characteristic: BluetoothGattCharacteristic,
@@ -116,8 +95,89 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
         }
     }
 
-    fun clearOutputData(address: String) {
-        outputReadMessages.remove(address)
+    private fun sendInitialMessage(
+        device: BluetoothDevice,
+        requestId: Int,
+        characteristic: BluetoothGattCharacteristic,) {
+        val jsonBytes =
+            if (initialMessages.containsKey(device.address)) {
+                initialMessages.getOrDefault(device.address, emptyArray())
+            } else {
+                var message = BluetoothReconciliation().getInitialMessage()
+                Log.d("BluetoothBleServer", "${device.address} - Created initial message : $message")
+                if (message != null) {
+                    var chunks = splitInChunks(message)
+                    Log.d("BluetoothBleServer", "${device.address} - Created ${chunks.size} chunks")
+                    chunks
+                } else {
+                    emptyArray()
+                }
+            }
+
+        if (jsonBytes.isNotEmpty()) {
+            Log.d("BluetoothBleServer", "${device.address} - Sending Chunk $jsonBytes ${jsonBytes.size}")
+            val nextChunk = jsonBytes.first()
+            initialMessages[device.address] = jsonBytes.copyOfRange(1, jsonBytes.size)
+
+            sendReadData(device, requestId, characteristic, nextChunk)
+
+            val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
+            if (isLastChunk) {
+                Log.d("BluetoothBleServer", "${device.address} - Last chunk sent")
+                initialMessages.remove(device.address)
+            }
+        }
+    }
+
+    private fun processReconciliationMessage(device: BluetoothDevice, characteristic: BluetoothGattCharacteristic, message: ByteArray) {
+        val address = device.address
+
+        if (address != null) {
+            val chunkIndex = message[0].toByte()
+
+            Log.d("BluetoothBle", "$address - Received reconciliation chunk $chunkIndex")
+            reconciliationMessages[address] = reconciliationMessages.getOrDefault(address, emptyArray()) + message
+
+            val isLastChunk = message[message.size - 1] == 1.toByte()
+            if (isLastChunk) {
+                Log.d("BluetoothBle", "$address - Last chunk received")
+
+                var chunks = reconciliationMessages.getOrDefault(address, emptyArray())
+                val decompressMessage = joinChunks(chunks)
+                Log.d("BluetoothBle", "$address - Received reconciliation message $decompressMessage")
+                val resultClient = BluetoothReconciliation().getReconcile(decompressMessage)
+                Log.d("BluetoothBle", "$address - Peer needs ${resultClient.needIds.map { it.toHexString() }}")
+
+                reconciliationMessages.remove(address)
+
+                Log.d("BluetoothBle", "$address - Sending to peer")
+                bluetoothBle.sendEvent(device, characteristic, "HOLA".toByteArray())
+            }
+        } else {
+            Log.e("BluetoothBle", "$address - Address not found")
+        }
+    }
+
+    private fun processEvent(device: BluetoothDevice, characteristic: BluetoothGattCharacteristic, message: ByteArray) {
+        val address = device.address
+
+        if (address != null) {
+            val chunkIndex = message[0].toByte()
+
+            Log.d("BluetoothBle", "$address - Received reconciliation chunk $chunkIndex")
+            eventMessages[address] = eventMessages.getOrDefault(address, emptyArray()) + message
+
+            val isLastChunk = message[message.size - 1] == 1.toByte()
+            if (isLastChunk) {
+                Log.d("BluetoothBle", "$address - Last chunk received")
+
+                var chunks = eventMessages.getOrDefault(address, emptyArray())
+                val decompressMessage = joinChunks(chunks)
+                Log.d("BluetoothBle", "$address - Received Event $decompressMessage")
+            }
+        } else {
+            Log.e("BluetoothBle", "$address - Address not found")
+        }
     }
 
     @SuppressLint("MissingPermission")

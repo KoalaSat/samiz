@@ -1,31 +1,19 @@
 package com.koalasat.samiz.bluethooth
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattServer
-import android.bluetooth.BluetoothGattServerCallback
-import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.AdvertiseCallback
-import android.bluetooth.le.AdvertiseData
-import android.bluetooth.le.AdvertiseSettings
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Context.BLUETOOTH_SERVICE
-import android.os.ParcelUuid
+import android.net.wifi.aware.Characteristics
 import android.util.Log
-import com.koalasat.samiz.util.Compression.Companion.compressByteArray
-import com.koalasat.samiz.util.Compression.Companion.decompressByteArray
 import com.koalasat.samiz.util.Compression.Companion.joinChunks
 import com.koalasat.samiz.util.Compression.Companion.splitInChunks
 import java.io.Closeable
-import java.nio.charset.Charset
 import java.util.UUID
 import kotlin.collections.plus
 import kotlin.collections.set
@@ -44,13 +32,14 @@ class BluetoothBle(var context: Context) : Closeable {
     private var bluetoothBleScanner = BluetoothBleScanner(this)
 
     private val deviceConnections = mutableMapOf<String, Long>()
-    private var inputReadMessages = HashMap<String, Array<ByteArray>>()
+    private var initialMessages = HashMap<String, Array<ByteArray>>()
 
     fun start() {
         bluetoothManager = context.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
 
-        if (!bluetoothManager.adapter.isEnabled) {
-            bluetoothManager.adapter.enable()
+        if (bluetoothManager.adapter == null || !bluetoothManager.adapter.isEnabled) {
+            Log.e("BluetoothBle", "Bluetooth not enabled")
+            return
         }
 
         bluetoothBleServer.createGattServer()
@@ -166,33 +155,67 @@ class BluetoothBle(var context: Context) : Closeable {
                 status: Int,
             ) {
                 val address = gatt?.device?.address
-                if (status == BluetoothGatt.GATT_SUCCESS && characteristic != null && address != null) {
+                if (status == BluetoothGatt.GATT_SUCCESS && characteristic != null) {
+                    Log.d("BluetoothBle", "$address - Read request")
                     var jsonBytes = characteristic.getValue()
                     if (jsonBytes != null) {
-                        val chunkIndex = jsonBytes[0].toByte()
-
-                        Log.d("BluetoothBle", "$address - Received chunk $chunkIndex")
-                        inputReadMessages[address] = inputReadMessages.getOrDefault(address, emptyArray()) + jsonBytes
-
-                        val isLastChunk = jsonBytes[jsonBytes.size - 1] == 1.toByte()
-                        if (isLastChunk) {
-                            Log.d("BluetoothBle", "$address - Last chunk received")
-                            bluetoothBleServer.clearOutputData(address)
-                        }
-
-                        if (isLastChunk) {
-                            var chunks = inputReadMessages.getOrDefault(address, emptyArray())
-                            val jointChunks = joinChunks(chunks)
-                            val decompressMessage = decompressByteArray(jointChunks)
-                            var data = String(decompressMessage, Charset.forName("UTF-8"))
-                            Log.d("BluetoothBle", "$address - Read successful: $data : size ${data.length}")
-                        } else {
-                            gatt.readCharacteristic(characteristic)
-                        }
+                        Log.d("BluetoothBle", "$address - Receiving initial message chunk $jsonBytes ${jsonBytes.size}")
+                        processInitialMessage(gatt, characteristic, jsonBytes)
                     }
                 } else {
                     Log.d("BluetoothBle", "$address - Read failed with status $status")
                 }
             }
         }
+
+    private fun processInitialMessage(gatt: BluetoothGatt?,
+                                   characteristic: BluetoothGattCharacteristic?,
+                                   jsonBytes: ByteArray) {
+        val address = gatt?.device?.address
+
+        if (characteristic != null && address != null) {
+            val chunkIndex = jsonBytes[0].toByte()
+
+            Log.d("BluetoothBle", "$address - Received chunk $chunkIndex")
+            initialMessages[address] = initialMessages.getOrDefault(address, emptyArray()) + jsonBytes
+
+            val isLastChunk = jsonBytes[jsonBytes.size - 1] == 1.toByte()
+            if (isLastChunk) {
+                Log.d("BluetoothBle", "$address - Last chunk received")
+                var chunks = initialMessages.getOrDefault(address, emptyArray())
+                val decompressMessage = joinChunks(chunks)
+                val resultClient = BluetoothReconciliation().getReconcile(decompressMessage)
+                if (resultClient.msg != null) {
+                    Log.d("BluetoothBle", "$address - Received initial message")
+                    sendReconciliationMessage(gatt, characteristic, resultClient.msg!!)
+                } else {
+                    Log.e("BluetoothBle", "$address - Bad initial message")
+                }
+                initialMessages.remove(address)
+            } else {
+                gatt.readCharacteristic(characteristic)
+            }
+        }
+    }
+
+    fun sendReconciliationMessage(gatt: BluetoothGatt?,
+                                   characteristic: BluetoothGattCharacteristic?,
+                                   message: ByteArray) {
+        val address = gatt?.device?.address
+        splitInChunks(message).forEach {
+            characteristic?.value = it
+            gatt?.writeCharacteristic(characteristic)
+        }
+        Log.d("BluetoothBle", "$address - Sent reconciliation message $message")
+    }
+
+    fun sendEvent(device: BluetoothDevice, characteristic: BluetoothGattCharacteristic, message: ByteArray) {
+        val gatt = deviceGatt[device.address]
+        val address = gatt?.device?.address
+        splitInChunks(message).forEach {
+            characteristic.value = it
+            gatt?.writeCharacteristic(characteristic)
+        }
+        Log.d("BluetoothBle", "$address - Sent event message $message")
+    }
 }
