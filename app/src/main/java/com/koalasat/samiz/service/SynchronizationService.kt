@@ -6,6 +6,7 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothCsipSetCoordinator
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
@@ -27,6 +28,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.health.connect.datatypes.Device
 import android.os.Binder
 import android.os.IBinder
 import android.os.ParcelUuid
@@ -39,12 +41,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.koalasat.samiz.util.Compression.Companion.compressByteArray
+import com.koalasat.samiz.util.Compression.Companion.decompressByteArray
+import com.koalasat.samiz.util.Compression.Companion.joinChunks
+import com.koalasat.samiz.util.Compression.Companion.splitInChunks
 import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Timer
 import java.util.TimerTask
 import java.util.UUID
+import kotlin.collections.getOrDefault
 
 class SynchronizationService : Service() {
     private var channelSyncId = "SyncConnections"
@@ -60,7 +67,10 @@ class SynchronizationService : Service() {
     private val deviceConnections = mutableMapOf<String, Long>()
     private var gatt: BluetoothGatt? = null
     private var connectedDevice: BluetoothDevice? = null
-    private var request = false
+    private var mtuSize = 512
+
+    private var outputReadMessages = HashMap<String, Array<ByteArray>>()
+    private var inputReadMessages = HashMap<String, Array<ByteArray>>()
 
     //////////////////////////////////////////////////////////////////// SERVICE
 
@@ -132,10 +142,34 @@ class SynchronizationService : Service() {
 
             override fun onCharacteristicReadRequest(device: BluetoothDevice, requestId: Int, offset: Int, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-                Log.d("NotificationsService", "New Read Request from ${device.name} : offset $offset")
-                val jsonArray = "[{\"key\":\"value\"},{\"key\":\"value\"}]"
-                val jsonBytes = jsonArray.toByteArray()
-                bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, jsonBytes.sliceArray(offset until jsonBytes.size))
+                if (characteristic.uuid.equals(characteristicUUID)) {
+                    val jsonBytes = if (outputReadMessages.containsKey(device.address)) {
+                        inputReadMessages.getOrDefault(device.address, emptyArray())
+                    } else {
+                        var message = "{\"id\":\"4376c65d2f232afbe9b882a35baa4f6fe8667c4e684749af565f981833ed6a65\",\"pubkey\":\"6e468422dfb74a5738702a8823b9b28168abab8655faacb6853cd0ee15deee93\",\"created_at\":1673347337,\"kind\":1,\"tags\":[[\"e\",\"3da979448d9ba263864c4d6f14984c423a3838364ec255f03c7904b1ae77f206\"],[\"p\",\"bf2376e17ba4ec269d10fcc996a4746b451152be9031fa48e74553dde5526bce\"]],\"content\":\"Walledgardensbecameprisons,andnostristhefirststeptowardstearingdowntheprisonwalls.\",\"sig\":\"908a15e46fb4d8675bab026fc230a0e3542bfade63da02d542fb78b2a8513fcd0092619a2c8c1221e581946e0191f2af505dfdf8657a414dbca329186f009262\"}"
+                        var compressedData = compressByteArray(message.toByteArray(Charset.forName("UTF-8")))
+                        var chunks = splitInChunks(compressedData)
+
+                        Log.d("NotificationsService", "Created ${chunks.size} chunks")
+                        chunks
+                    }
+
+                    if (jsonBytes.isNotEmpty()) {
+                        Log.d("NotificationsService", "Sending Chunk ${jsonBytes.size}")
+                        val nextChunk = jsonBytes.first()
+                        outputReadMessages[device.address] = jsonBytes.copyOfRange(1, jsonBytes.size)
+
+                        sendData(device, requestId, characteristic, nextChunk)
+
+                        val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
+                        if (isLastChunk) {
+                            Log.d("NotificationsService", "Last chunk sent")
+                            outputReadMessages.remove(device.address)
+                        }
+                    }
+                } else {
+                    bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_READ_NOT_PERMITTED, offset, null);
+                }
             }
 
             override fun onCharacteristicWriteRequest(device: BluetoothDevice, requestId: Int, characteristic: BluetoothGattCharacteristic, preparedWrite: Boolean, responseNeeded: Boolean, offset: Int, value: ByteArray) {
@@ -157,6 +191,19 @@ class SynchronizationService : Service() {
                 )
             }
         })
+    }
+
+    @SuppressLint("MissingPermission")
+    fun sendData(device: BluetoothDevice, requestId: Int, characteristic: BluetoothGattCharacteristic, jsonBytes: ByteArray) {
+        var offset = 0
+
+        while (offset < jsonBytes.size) {
+            val chunkSize = minOf(mtuSize, jsonBytes.size + offset)
+            val chunk = jsonBytes.copyOfRange(offset, minOf(offset + chunkSize, jsonBytes.size))
+            characteristic.value = chunk
+            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, chunk)
+            offset += chunkSize
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -245,6 +292,7 @@ class SynchronizationService : Service() {
             when (newState) {
                 BluetoothGatt.STATE_CONNECTED -> {
                     Log.d("NotificationsService", "Connected to GATT server")
+                    gatt.requestMtu(mtuSize)
                     gatt.discoverServices()
                 }
                 BluetoothGatt.STATE_DISCONNECTED -> {
@@ -297,17 +345,36 @@ class SynchronizationService : Service() {
             }
         }
 
+        @SuppressLint("MissingPermission")
         override fun onCharacteristicRead(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
-            super.onCharacteristicRead(gatt, characteristic, status)
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                val jsonBytes = characteristic?.value
-                if (jsonBytes != null) {
-                    val jsonArray = String(jsonBytes, Charset.forName("UTF-8"))
-                    Log.d("NotificationsService", "Read successful: $jsonArray")
+            if (status == BluetoothGatt.GATT_SUCCESS && characteristic != null) {
+                var jsonBytes = characteristic.getValue();
+                if (jsonBytes != null && gatt?.device?.address != null) {
+                    val address = gatt.device.address
+                    val chunkIndex = jsonBytes[0].toByte()
+
+                    Log.d("NotificationsService", "Received chunk $chunkIndex")
+                    inputReadMessages[address] = inputReadMessages.getOrDefault(address, emptyArray()) + jsonBytes
+
+                    val isLastChunk = jsonBytes[jsonBytes.size - 1] == 1.toByte()
+                    if (isLastChunk) {
+                        Log.d("NotificationsService", "Last chunk received")
+                        outputReadMessages.remove(address)
+                    }
+
+                    if (isLastChunk) {
+                        var chunks = inputReadMessages.getOrDefault(address, emptyArray())
+                        val jointChunks = joinChunks(chunks)
+                        val decompressMessage = decompressByteArray(jointChunks)
+                        var data = String(decompressMessage, Charset.forName("UTF-8"))
+                        Log.d("NotificationsService", "Read successful: $data : size ${data.length}")
+                    } else {
+                        gatt.readCharacteristic(characteristic)
+                    }
                 }
             } else {
                 Log.d("NotificationsService", "Read failed with status $status")
