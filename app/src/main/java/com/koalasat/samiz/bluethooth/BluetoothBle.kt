@@ -39,7 +39,7 @@ class BluetoothBle(var context: Context) : Closeable {
     var bluetoothBleServer = BluetoothBleServer(this)
     lateinit var bluetoothManager: BluetoothManager
 
-    private var gatt: BluetoothGatt? = null
+    private var deviceGatt = HashMap<String, BluetoothGatt>()
     private var bluetoothBleAdvertiser = BluetoothBleAdvertiser(this)
     private var bluetoothBleScanner = BluetoothBleScanner(this)
 
@@ -60,7 +60,7 @@ class BluetoothBle(var context: Context) : Closeable {
 
     @SuppressLint("MissingPermission")
     override fun close() {
-        gatt?.close()
+        deviceGatt.values.forEach { it.close() }
     }
 
 
@@ -74,8 +74,9 @@ class BluetoothBle(var context: Context) : Closeable {
         }
         deviceConnections[device.address] = now
 
-        Log.d("NotificationsService", "Connecting to device: ${device.name} - ${device.address}")
-        gatt = device.connectGatt(context, false, bluetoothGattCallback)
+        val gatt = device.connectGatt(context, false, bluetoothGattCallback)
+        val address = gatt?.device?.address
+        Log.d("BluetoothBle", "$address - Connecting to device: ${device.name} - ${device.address}")
     }
 
     private val bluetoothGattCallback =
@@ -87,14 +88,22 @@ class BluetoothBle(var context: Context) : Closeable {
                 newState: Int,
             ) {
                 super.onConnectionStateChange(gatt, status, newState)
+                val address = gatt.device?.address
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
-                        Log.d("NotificationsService", "Connected to GATT server")
+                        Log.d("BluetoothBle", "$address - Connected to GATT server")
                         gatt.requestMtu(mtuSize)
                         gatt.discoverServices()
+                        if (address != null) {
+                            deviceGatt[address] = gatt
+                        } else {
+                            Log.e("BluetoothBle", "Device address not found")
+                        }
+
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
-                        Log.d("NotificationsService", "Disconnected from GATT server")
+                        Log.d("BluetoothBle", "$address - Disconnected from GATT server")
+                        deviceGatt.remove(address)
                         gatt.close()
                     }
                 }
@@ -106,16 +115,17 @@ class BluetoothBle(var context: Context) : Closeable {
                 status: Int,
             ) {
                 super.onServicesDiscovered(gatt, status)
-                Log.d("NotificationsService", "GATT Status: $status")
+                val address = gatt.device?.address
+                Log.d("BluetoothBle", "$address - GATT Status: $status")
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     val service = gatt.getService(serviceUUID)
                     if (service == null) {
-                        Log.d("NotificationsService", "Service not existing")
+                        Log.d("BluetoothBle", "$address - Service not existing")
                     } else {
-                        Log.d("NotificationsService", "Discovered Service: ${service.uuid}")
+                        Log.d("BluetoothBle", "$address - Discovered Service: ${service.uuid}")
                         val characteristic = service.getCharacteristic(characteristicUUID)
                         if (characteristic != null) {
-                            Log.d("NotificationsService", "Reading characteristic")
+                            Log.d("BluetoothBle", "$address - Reading characteristic")
                             gatt.readCharacteristic(characteristic)
                         }
                     }
@@ -130,7 +140,7 @@ class BluetoothBle(var context: Context) : Closeable {
                 val response = characteristic.value
                 val responseMessage = String(response)
                 // Handle the response message
-                println("Response from ${characteristic.service.uuid} : $responseMessage")
+                Log.d("BluetoothBle", "Characteristic changed : $responseMessage")
             }
 
             @SuppressLint("MissingPermission")
@@ -141,10 +151,11 @@ class BluetoothBle(var context: Context) : Closeable {
             ) {
                 super.onCharacteristicWrite(gatt, characteristic, status)
 
+                val address = gatt?.device?.address
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.d("NotificationsService", "Write successful")
+                    Log.d("BluetoothBle", "$address - Write successful")
                 } else {
-                    Log.d("NotificationsService", "Write failed with status $status")
+                    Log.d("BluetoothBle", "$address - Write failed with status $status")
                 }
             }
 
@@ -154,18 +165,18 @@ class BluetoothBle(var context: Context) : Closeable {
                 characteristic: BluetoothGattCharacteristic?,
                 status: Int,
             ) {
-                if (status == BluetoothGatt.GATT_SUCCESS && characteristic != null) {
+                val address = gatt?.device?.address
+                if (status == BluetoothGatt.GATT_SUCCESS && characteristic != null && address != null) {
                     var jsonBytes = characteristic.getValue()
-                    if (jsonBytes != null && gatt?.device?.address != null) {
-                        val address = gatt.device.address
+                    if (jsonBytes != null) {
                         val chunkIndex = jsonBytes[0].toByte()
 
-                        Log.d("NotificationsService", "Received chunk $chunkIndex")
+                        Log.d("BluetoothBle", "$address - Received chunk $chunkIndex")
                         inputReadMessages[address] = inputReadMessages.getOrDefault(address, emptyArray()) + jsonBytes
 
                         val isLastChunk = jsonBytes[jsonBytes.size - 1] == 1.toByte()
                         if (isLastChunk) {
-                            Log.d("NotificationsService", "Last chunk received")
+                            Log.d("BluetoothBle", "$address - Last chunk received")
                             bluetoothBleServer.clearOutputData(address)
                         }
 
@@ -174,13 +185,13 @@ class BluetoothBle(var context: Context) : Closeable {
                             val jointChunks = joinChunks(chunks)
                             val decompressMessage = decompressByteArray(jointChunks)
                             var data = String(decompressMessage, Charset.forName("UTF-8"))
-                            Log.d("NotificationsService", "Read successful: $data : size ${data.length}")
+                            Log.d("BluetoothBle", "$address - Read successful: $data : size ${data.length}")
                         } else {
                             gatt.readCharacteristic(characteristic)
                         }
                     }
                 } else {
-                    Log.d("NotificationsService", "Read failed with status $status")
+                    Log.d("BluetoothBle", "$address - Read failed with status $status")
                 }
             }
         }

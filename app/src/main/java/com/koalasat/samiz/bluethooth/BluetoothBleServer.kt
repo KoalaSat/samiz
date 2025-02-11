@@ -46,12 +46,12 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
                                     var compressedData = compressByteArray(message.toByteArray(Charset.forName("UTF-8")))
                                     var chunks = splitInChunks(compressedData)
 
-                                    Log.d("NotificationsService", "Created ${chunks.size} chunks")
+                                    Log.d("BluetoothBleServer", "${device.address} - Created ${chunks.size} chunks")
                                     chunks
                                 }
 
                             if (jsonBytes.isNotEmpty()) {
-                                Log.d("NotificationsService", "Sending Chunk ${jsonBytes.size}")
+                                Log.d("BluetoothBleServer", "${device.address} - Sending Chunk ${jsonBytes.size}")
                                 val nextChunk = jsonBytes.first()
                                 outputReadMessages[device.address] = jsonBytes.copyOfRange(1, jsonBytes.size)
 
@@ -59,7 +59,7 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
 
                                 val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
                                 if (isLastChunk) {
-                                    Log.d("NotificationsService", "Last chunk sent")
+                                    Log.d("BluetoothBleServer", "${device.address} - Last chunk sent")
                                     outputReadMessages.remove(device.address)
                                 }
                             }
@@ -90,8 +90,8 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle) {
                         val message = String(value)
 
                         Log.d(
-                            "NotificationsService",
-                            "Write request from ${device.name} : $message",
+                            "BluetoothBleServer",
+                            "${device.address} - Write request from ${device.name} : $message",
                         )
                     }
                 },

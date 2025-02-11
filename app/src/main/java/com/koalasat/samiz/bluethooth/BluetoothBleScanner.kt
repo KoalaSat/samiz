@@ -37,7 +37,7 @@ class BluetoothBleScanner(private var bluetoothBle: BluetoothBle) {
 
             override fun onScanFailed(errorCode: Int) {
                 super.onScanFailed(errorCode)
-                Log.e("BluetoothService", "Scan failed with error code: $errorCode")
+                Log.e("BluetoothBleScanner", "Scan failed with error code: $errorCode")
             }
         }
 }
