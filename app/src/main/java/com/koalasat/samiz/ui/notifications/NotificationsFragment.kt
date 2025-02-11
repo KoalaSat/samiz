@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.koalasat.samiz.databinding.FragmentNotificationsBinding
 
 class NotificationsFragment : Fragment() {
-
     private var _binding: FragmentNotificationsBinding? = null
 
     // This property is only valid between onCreateView and
@@ -20,7 +19,7 @@ class NotificationsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val notificationsViewModel =
             ViewModelProvider(this).get(NotificationsViewModel::class.java)

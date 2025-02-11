@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.2"
+agp = "8.7.3"
 kotlin = "2.0.20"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -10,11 +10,11 @@ material = "1.12.0"
 constraintlayout = "2.2.0"
 lifecycleLivedataKtx = "2.8.7"
 lifecycleViewmodelKtx = "2.8.7"
-navigationFragmentKtx = "2.8.3"
-navigationUiKtx = "2.8.3"
+navigationFragmentKtx = "2.8.6"
+navigationUiKtx = "2.8.6"
 rxandroidble = "1.19.0"
 rxjava = "2.2.19"
-rxandroid = "2.1.1"
+ktlint = "12.1.1"
 rxkotlin = "2.4.0"
 
 [libraries]
@@ -36,4 +36,6 @@ rxkotlin = { group = "io.reactivex.rxjava2", name = "rxkotlin", version.ref = "r
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+gradle_ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+
 

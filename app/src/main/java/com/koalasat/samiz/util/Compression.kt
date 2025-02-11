@@ -1,12 +1,11 @@
 package com.koalasat.samiz.util
 
-import java.util.zip.DeflaterOutputStream
-import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.zip.DeflaterOutputStream
 
 class Compression {
     companion object {
-
         fun compressByteArray(byteArray: ByteArray): ByteArray {
             val bos = ByteArrayOutputStream()
             val dos = DeflaterOutputStream(bos)
@@ -44,7 +43,13 @@ class Compression {
                 val chunkWithIndex = ByteArray(chunk.size + 2)
                 chunkWithIndex[0] = chunkIndex.toByte() // chunk index
                 chunk.copyInto(chunkWithIndex, 1)
-                chunkWithIndex[chunkWithIndex.size - 1] = if (i == numChunks - 1) 1.toByte() else 0.toByte() // last chunk flag (0 = not last, 1 = last)
+                chunkWithIndex[chunkWithIndex.size - 1] =
+                    if
+                        (i == numChunks - 1) {
+                        1.toByte()
+                    } else {
+                        0.toByte() // last chunk flag (0 = not last, 1 = last)
+                    }
 
                 // store the chunk in the array
                 chunks[i] = chunkWithIndex
