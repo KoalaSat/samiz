@@ -7,8 +7,15 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.ParcelUuid
 import android.util.Log
+import java.io.Closeable
 
-class BluetoothBleScanner(private var bluetoothBle: BluetoothBle) {
+class BluetoothBleScanner(private var bluetoothBle: BluetoothBle) : Closeable {
+
+    @SuppressLint("MissingPermission")
+    override fun close() {
+        bluetoothBle.bluetoothManager.adapter.bluetoothLeScanner.stopScan(scanCallback)
+    }
+
     @SuppressLint("MissingPermission")
     fun startScanning() {
         val scanFilter =

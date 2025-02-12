@@ -2,16 +2,21 @@ package com.koalasat.samiz.bluethooth
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.os.ParcelUuid
 import android.util.Log
-import java.util.UUID
+import java.io.Closeable
 
-class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) {
+class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable {
+
+    @SuppressLint("MissingPermission")
+    override fun close() {
+        bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
+    }
+
     @SuppressLint("MissingPermission")
     fun startAdvertising() {
         val service = BluetoothGattService(bluetoothBle.serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
@@ -22,7 +27,7 @@ class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) {
                 BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE,
             )
         service.addCharacteristic(characteristic)
-        bluetoothBle.bluetoothBleServer.addService(service)
+        bluetoothBle.addService(service)
 
         val advertiseData =
             AdvertiseData.Builder()
