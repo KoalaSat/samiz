@@ -80,6 +80,26 @@ Frank decides to leave the party a bit early to pay a visit to Faythe, a tech-sa
 
 # Docs
 
+## BLE Messaging
+
+Samiz utilizes BLE technology to ensure low battery consumption. Because of the limitations of this technology, achieving HTTP-like behavior requires several key considerations:
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/4ee154ab-adbc-493f-9909-dbb294d507da" width="500"/>
+</div>
+
+- *compressByteArray*: To minimize message size, the string is converted to a ByteArray and then compressed using Deflater.
+- *splitInChunks*: BLE has a 512-byte limit per message. For larger messages, the text is split into chunks and sent individually to the other device. To facilitate this process, each chunk includes metadata:
+
+````
+  [chunk index (int)][chunk][is last chunk (boolean)]
+````
+
+This metadata includes the chunk's index in the original message and a boolean indicating whether it's the final chunk.
+
+- *joinChunks*: Once all chunks are received, the message is reassembled.
+- *decompressByteArray*: The compressed ByteArray is then decompressed, allowing it to be converted back to a String.
+
 ## Negentropy
 
 Samiz uses BLE technology and [Negentropy](https://github.com/hoytech/strfry/blob/542552ab0f5234f808c52c21772b34f6f07bec65/docs/negentropy.md) to achieve lower battery consumption and maximum efficiency for device synchronization.
