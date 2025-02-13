@@ -100,6 +100,8 @@ This metadata includes the chunk's index in the original message and a boolean i
 - *joinChunks*: Once all chunks are received, the message is reassembled.
 - *decompressByteArray*: The compressed ByteArray is then decompressed, allowing it to be converted back to a String.
 
+The same behavior also applies to writing.
+
 ## Negentropy
 
 Samiz uses BLE technology and [Negentropy](https://github.com/hoytech/strfry/blob/542552ab0f5234f808c52c21772b34f6f07bec65/docs/negentropy.md) to achieve lower battery consumption and maximum efficiency for device synchronization.
