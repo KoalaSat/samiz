@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.koalasat.samiz.R
 import com.koalasat.samiz.bluethooth.BluetoothBle
+import com.koalasat.samiz.bluethooth.BluetoothReconciliation
 import java.util.Timer
 
 class SynchronizationService : Service() {
@@ -21,7 +22,7 @@ class SynchronizationService : Service() {
     private val timer = Timer()
 
     private val binder = BluetoothBinder()
-    private val bluetoothBle = BluetoothBle(this)
+    private val bluetoothBle = BluetoothReconciliation(this)
 
     override fun onBind(intent: Intent?): IBinder {
         return binder
@@ -39,12 +40,12 @@ class SynchronizationService : Service() {
 
     private fun startService() {
         try {
-            Log.d("NotificationsService", "Starting foreground service...")
+            Log.d("SynchronizationService", "Starting foreground service...")
             startForeground(1, createNotification())
             bluetoothBle.start()
             keepAlive()
         } catch (e: Exception) {
-            Log.e("NotificationsService", "Error in service", e)
+            Log.e("SynchronizationService", "Error in service", e)
         }
     }
 
@@ -67,7 +68,7 @@ class SynchronizationService : Service() {
     private fun createNotification(): Notification {
         val notificationManager = NotificationManagerCompat.from(this)
 
-        Log.d("NotificationsService", "Building groups...")
+        Log.d("SynchronizationService", "Building groups...")
         val group =
             NotificationChannelGroupCompat.Builder("ServiceGroup")
                 .setName(getString(R.string.service))
@@ -76,7 +77,7 @@ class SynchronizationService : Service() {
 
         notificationManager.createNotificationChannelGroup(group)
 
-        Log.d("NotificationsService", "Building channels...")
+        Log.d("SynchronizationService", "Building channels...")
         val channelRelays =
             NotificationChannelCompat.Builder(channelSyncId, NotificationManager.IMPORTANCE_DEFAULT)
                 .setName(getString(R.string.sync_service))
@@ -86,7 +87,7 @@ class SynchronizationService : Service() {
 
         notificationManager.createNotificationChannel(channelRelays)
 
-        Log.d("NotificationsService", "Building notification...")
+        Log.d("SynchronizationService", "Building notification...")
         val notificationBuilder =
             NotificationCompat.Builder(this, channelSyncId)
                 .setContentTitle(getString(R.string.samiz_is_running_in_background))

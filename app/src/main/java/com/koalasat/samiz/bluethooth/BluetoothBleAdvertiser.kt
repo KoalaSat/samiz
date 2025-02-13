@@ -20,13 +20,20 @@ class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable
     @SuppressLint("MissingPermission")
     fun startAdvertising() {
         val service = BluetoothGattService(bluetoothBle.serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
-        val characteristic =
-            BluetoothGattCharacteristic(
-                bluetoothBle.characteristicUUID,
-                BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE,
-                BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE,
-            )
-        service.addCharacteristic(characteristic)
+        val readCharacteristic = BluetoothGattCharacteristic(
+            bluetoothBle.readCharacteristicUUID,
+            BluetoothGattCharacteristic.PROPERTY_READ,
+            BluetoothGattCharacteristic.PERMISSION_READ
+        )
+        val writeCharacteristic = BluetoothGattCharacteristic(
+            bluetoothBle.writeCharacteristicUUID,
+            BluetoothGattCharacteristic.PROPERTY_WRITE,
+            BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+        writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+
+        service.addCharacteristic(readCharacteristic)
+        service.addCharacteristic(writeCharacteristic)
         bluetoothBle.addService(service)
 
         val advertiseData =
@@ -50,12 +57,12 @@ class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable
         object : AdvertiseCallback() {
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
                 super.onStartSuccess(settingsInEffect)
-                Log.d("NotificationsService", "Advertising started successfully")
+                Log.d("BluetoothBleAdvertiser", "Advertising started successfully")
             }
 
             override fun onStartFailure(errorCode: Int) {
                 super.onStartFailure(errorCode)
-                Log.e("NotificationsService", "Advertising failed with error: $errorCode")
+                Log.e("BluetoothBleAdvertiser", "Advertising failed with error: $errorCode")
             }
         }
 }

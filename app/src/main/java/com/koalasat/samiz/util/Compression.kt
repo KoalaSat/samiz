@@ -1,11 +1,20 @@
 package com.koalasat.samiz.util
 
+import android.util.Base64
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.DeflaterOutputStream
 
 class Compression {
     companion object {
+        fun hexStringToByteArray(hexString: String): ByteArray {
+            return hexString.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        }
+
+        fun byteArrayToHexString(byteArray: ByteArray): String {
+            return byteArray.joinToString("") { String.format("%02x", it) }
+        }
+
         fun splitInChunks(message: ByteArray): Array<ByteArray> {
             val chunkSize = 512 // define the chunk size
 

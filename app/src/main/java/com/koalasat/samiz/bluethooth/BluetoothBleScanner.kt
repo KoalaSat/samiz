@@ -1,6 +1,7 @@
 package com.koalasat.samiz.bluethooth
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -9,7 +10,11 @@ import android.os.ParcelUuid
 import android.util.Log
 import java.io.Closeable
 
-class BluetoothBleScanner(private var bluetoothBle: BluetoothBle) : Closeable {
+interface BluetoothBleScannerCallback {
+    fun onDeviceFound(device: BluetoothDevice)
+}
+
+class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleScannerCallback) : Closeable {
 
     @SuppressLint("MissingPermission")
     override fun close() {
@@ -39,7 +44,7 @@ class BluetoothBleScanner(private var bluetoothBle: BluetoothBle) : Closeable {
             ) {
                 super.onScanResult(callbackType, result)
                 val device = result.device
-                bluetoothBle.connectToDevice(device)
+                callback.onDeviceFound(device)
             }
 
             override fun onScanFailed(errorCode: Int) {
