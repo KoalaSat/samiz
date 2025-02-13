@@ -78,6 +78,16 @@ Frank decides to leave the party a bit early to pay a visit to Faythe, a tech-sa
 <img src="https://github.com/user-attachments/assets/15b0cc28-6e41-4049-98a4-ff32fd48ab24" width="500"/>
 </div>
 
+# Docs
+
+## Negentropy
+
+Samiz uses BLE technology and [Negentropy](https://github.com/hoytech/strfry/blob/542552ab0f5234f808c52c21772b34f6f07bec65/docs/negentropy.md) to achieve lower battery consumption and maximum efficiency for device synchronization.
+
+<div align="center">
+<img src="https://github.com/user-attachments/assets/303cefa2-1a31-4ed5-b2d8-7d370a0d1ec3" width="500"/>
+</div>
+
 # Sponsors
 
 <div align="center">
