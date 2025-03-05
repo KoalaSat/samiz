@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# JSON parsing
+-keep class com.vitorpamplona.quartz.crypto.** { *; }
+-keep class com.vitorpamplona.quartz.encoders.** { *; }
+-keep class com.vitorpamplona.quartz.events.** { *; }
+-keep class com.vitorpamplona.amethyst.model.** { *; }
+-keep class com.vitorpamplona.amethyst.service.** { *; }

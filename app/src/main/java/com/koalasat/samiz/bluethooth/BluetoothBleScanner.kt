@@ -15,7 +15,6 @@ interface BluetoothBleScannerCallback {
 }
 
 class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleScannerCallback) : Closeable {
-
     @SuppressLint("MissingPermission")
     override fun close() {
         bluetoothBle.bluetoothManager.adapter.bluetoothLeScanner.stopScan(scanCallback)

@@ -69,7 +69,7 @@ class Samiz : Application() {
         }
 
         fun isForegroundServiceEnabled(context: Context): Boolean {
-            val sharedPreferences: SharedPreferences = context.getSharedPreferences("PokeyPreferences", MODE_PRIVATE)
+            val sharedPreferences: SharedPreferences = context.getSharedPreferences("SamizPreferences", MODE_PRIVATE)
             return sharedPreferences.getBoolean("foreground_service_enabled", false)
         }
 
@@ -77,7 +77,7 @@ class Samiz : Application() {
             context: Context,
             value: Boolean,
         ) {
-            val sharedPreferences: SharedPreferences = context.getSharedPreferences("PokeyPreferences", MODE_PRIVATE)
+            val sharedPreferences: SharedPreferences = context.getSharedPreferences("SamizPreferences", MODE_PRIVATE)
             val editor = sharedPreferences.edit()
             editor.putBoolean("foreground_service_enabled", value)
             editor.apply()

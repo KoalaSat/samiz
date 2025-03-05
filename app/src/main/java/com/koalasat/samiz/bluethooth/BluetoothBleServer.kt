@@ -13,10 +13,17 @@ import com.koalasat.samiz.util.Compression.Companion.splitInChunks
 import java.io.Closeable
 import kotlin.collections.set
 
-
 interface BluetoothBleServerCallback {
-    fun onReadRequest(device: BluetoothDevice, characteristic: BluetoothGattCharacteristic): ByteArray?
-    fun onWriteRequest(device: BluetoothDevice, characteristic: BluetoothGattCharacteristic, message: ByteArray)
+    fun onReadRequest(
+        device: BluetoothDevice,
+        characteristic: BluetoothGattCharacteristic,
+    ): ByteArray?
+
+    fun onWriteRequest(
+        device: BluetoothDevice,
+        characteristic: BluetoothGattCharacteristic,
+        message: ByteArray,
+    )
 }
 
 class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleServerCallback) : Closeable {
@@ -82,26 +89,15 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         var message = processWriteMessage(device, value)
                         if (message != null) {
                             callback.onWriteRequest(device, characteristic, message)
-                            if (responseNeeded) {
-                                bluetoothGattServer.sendResponse(
-                                    device,
-                                    requestId,
-                                    BluetoothGatt.GATT_SUCCESS,
-                                    0,
-                                    null
-                                )
-                            }
-                        } else {
-                            Log.e("BluetoothBleServer", "${device.address} - Invalid Write request")
-                            if (responseNeeded) {
-                                bluetoothGattServer.sendResponse(
-                                    device,
-                                    requestId,
-                                    BluetoothGatt.GATT_FAILURE,
-                                    0,
-                                    null
-                                )
-                            }
+                        }
+                        if (responseNeeded) {
+                            bluetoothGattServer.sendResponse(
+                                device,
+                                requestId,
+                                BluetoothGatt.GATT_SUCCESS,
+                                0,
+                                null,
+                            )
                         }
                     }
                 },
@@ -146,20 +142,23 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
         }
     }
 
-    private fun processWriteMessage(device: BluetoothDevice, message: ByteArray): ByteArray? {
+    private fun processWriteMessage(
+        device: BluetoothDevice,
+        message: ByteArray,
+    ): ByteArray? {
         val address = device.address
 
         if (address != null) {
             val chunkIndex = message[0].toByte()
 
-            Log.d("BluetoothBle", "$address - Received chunk ${chunkIndex + 1}")
+            Log.d("BluetoothBle", "$address - Received chunk $chunkIndex")
             writeMessages[address] = writeMessages.getOrDefault(address, emptyArray()) + message
 
-            val isLastChunk = message[message.size - 1] == 1.toByte()
-            if (isLastChunk) {
+            val totalChunks = message[message.size - 1].toInt()
+            var chunks = writeMessages.getOrDefault(address, emptyArray())
+            if (totalChunks == chunks.size) {
                 Log.d("BluetoothBle", "$address - Last chunk received")
 
-                var chunks = writeMessages.getOrDefault(address, emptyArray())
                 val decompressMessage = joinChunks(chunks)
                 Log.d("BluetoothBle", "$address - Received full write message")
                 writeMessages.remove(address)
@@ -174,6 +173,6 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
 
     @SuppressLint("MissingPermission")
     fun addService(service: BluetoothGattService) {
-       bluetoothGattServer.addService(service)
+        bluetoothGattServer.addService(service)
     }
 }

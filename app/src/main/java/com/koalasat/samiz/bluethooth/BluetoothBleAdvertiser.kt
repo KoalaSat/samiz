@@ -11,7 +11,6 @@ import android.util.Log
 import java.io.Closeable
 
 class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable {
-
     @SuppressLint("MissingPermission")
     override fun close() {
         bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
@@ -20,16 +19,18 @@ class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable
     @SuppressLint("MissingPermission")
     fun startAdvertising() {
         val service = BluetoothGattService(bluetoothBle.serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
-        val readCharacteristic = BluetoothGattCharacteristic(
-            bluetoothBle.readCharacteristicUUID,
-            BluetoothGattCharacteristic.PROPERTY_READ,
-            BluetoothGattCharacteristic.PERMISSION_READ
-        )
-        val writeCharacteristic = BluetoothGattCharacteristic(
-            bluetoothBle.writeCharacteristicUUID,
-            BluetoothGattCharacteristic.PROPERTY_WRITE,
-            BluetoothGattCharacteristic.PERMISSION_WRITE
-        )
+        val readCharacteristic =
+            BluetoothGattCharacteristic(
+                bluetoothBle.readCharacteristicUUID,
+                BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PERMISSION_READ,
+            )
+        val writeCharacteristic =
+            BluetoothGattCharacteristic(
+                bluetoothBle.writeCharacteristicUUID,
+                BluetoothGattCharacteristic.PROPERTY_WRITE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE,
+            )
         writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
         service.addCharacteristic(readCharacteristic)

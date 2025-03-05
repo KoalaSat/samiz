@@ -1,6 +1,5 @@
 package com.koalasat.samiz.util
 
-import android.util.Base64
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.DeflaterOutputStream
@@ -17,7 +16,6 @@ class Compression {
 
         fun splitInChunks(message: ByteArray): Array<ByteArray> {
             val chunkSize = 512 // define the chunk size
-
             var byteArray = compressByteArray(message)
             val numChunks = (byteArray.size + chunkSize - 1) / chunkSize // calculate the number of chunks
             var chunkIndex = 0
@@ -32,13 +30,7 @@ class Compression {
                 val chunkWithIndex = ByteArray(chunk.size + 2)
                 chunkWithIndex[0] = chunkIndex.toByte() // chunk index
                 chunk.copyInto(chunkWithIndex, 1)
-                chunkWithIndex[chunkWithIndex.size - 1] =
-                    if
-                        (i == numChunks - 1) {
-                        1.toByte()
-                    } else {
-                        0.toByte() // last chunk flag (0 = not last, 1 = last)
-                    }
+                chunkWithIndex[chunkWithIndex.size - 1] = numChunks.toByte()
 
                 // store the chunk in the array
                 chunks[i] = chunkWithIndex
@@ -50,15 +42,16 @@ class Compression {
         }
 
         fun joinChunks(chunks: Array<ByteArray>): ByteArray {
+            val sortedChunks = chunks.sortedBy { it[0] }
             var reassembledByteArray = ByteArray(0)
-            for (chunk in chunks) {
+            for (chunk in sortedChunks) {
                 val chunkData = chunk.copyOfRange(1, chunk.size - 1)
                 reassembledByteArray = reassembledByteArray.copyOf(reassembledByteArray.size + chunkData.size)
                 chunkData.copyInto(reassembledByteArray, reassembledByteArray.size - chunkData.size)
             }
+
             return decompressByteArray(reassembledByteArray)
         }
-
 
         private fun compressByteArray(byteArray: ByteArray): ByteArray {
             if (byteArray.isEmpty()) {

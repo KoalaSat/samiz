@@ -12,8 +12,10 @@ import androidx.core.app.NotificationChannelGroupCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.koalasat.samiz.R
-import com.koalasat.samiz.bluethooth.BluetoothBle
 import com.koalasat.samiz.bluethooth.BluetoothReconciliation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Timer
 
 class SynchronizationService : Service() {
@@ -22,7 +24,7 @@ class SynchronizationService : Service() {
     private val timer = Timer()
 
     private val binder = BluetoothBinder()
-    private val bluetoothBle = BluetoothReconciliation(this)
+    private val bluetoothReconciliation = BluetoothReconciliation(this)
 
     override fun onBind(intent: Intent?): IBinder {
         return binder
@@ -38,11 +40,18 @@ class SynchronizationService : Service() {
         return START_STICKY
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        bluetoothReconciliation.close()
+    }
+
     private fun startService() {
         try {
             Log.d("SynchronizationService", "Starting foreground service...")
             startForeground(1, createNotification())
-            bluetoothBle.start()
+            CoroutineScope(Dispatchers.IO).launch {
+                bluetoothReconciliation.start()
+            }
             keepAlive()
         } catch (e: Exception) {
             Log.e("SynchronizationService", "Error in service", e)
