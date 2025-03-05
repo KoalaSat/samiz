@@ -59,18 +59,36 @@ class BluetoothReconciliation(var context: Context) {
                     val type = jsonArray.getString(0)
                     Log.d("BluetoothReconciliation", "${device.address} - Read response received : $jsonArray")
                     if (type == "NEG-OPEN") {
+                        Log.d("BluetoothReconciliation", "${device.address} - OPEN with message ${jsonArray.getString(3)}")
                         deviceNegentropy = getNegentropy()
                         val byteArray = Compression.hexStringToByteArray(jsonArray.getString(3))
                         val result = deviceNegentropy.reconcile(byteArray)
                         val msg = result.msg
                         if (msg != null) {
                             deviceSendIds[device.address] = result.sendIds.map { it.toHexString() }
-                            Log.d("BluetoothReconciliation", "${device.address} - Found ${result.sendIds.size} events to send")
+                            Log.d(
+                                "BluetoothReconciliation",
+                                "${device.address} - Reconciliation message ${result.msgToString()}",
+                            )
+                            Log.d(
+                                "BluetoothReconciliation",
+                                "${device.address} - Found ${result.sendIds.size} events to send",
+                            )
+                            Log.d(
+                                "BluetoothReconciliation",
+                                "${device.address} - Found ${result.needIds.size} events to receive",
+                            )
                             val negMessage = negMessage(device, msg)
-                            Log.d("BluetoothReconciliation", "${device.address} - Sending reconciliation response : $negMessage")
+                            Log.d(
+                                "BluetoothReconciliation",
+                                "${device.address} - Sending reconciliation response : $negMessage",
+                            )
                             bluetoothBle.writeMessage(device, negMessage.toString().toByteArray())
                         } else {
-                            Log.d("BluetoothReconciliation", "${device.address} - Not reconciliation needed")
+                            Log.d(
+                                "BluetoothReconciliation",
+                                "${device.address} - Not reconciliation needed",
+                            )
                         }
                     } else if (type == "EVENT" || type == "EOSE") {
                         Log.d("BluetoothReconciliation", "${device.address} - Received missing nostr note")
@@ -81,9 +99,8 @@ class BluetoothReconciliation(var context: Context) {
                                 val eventId = haveIds.last().toString()
                                 deviceSendIds[device.address] = haveIds.dropLast(1)
 
-                                Log.d("BluetoothReconciliation", "${device.address} - Found missing event id : $eventId")
                                 var event = getEvent(eventId).toJson()
-                                Log.d("BluetoothReconciliation", "${device.address} - Sending missing event : $event")
+                                Log.d("BluetoothReconciliation", "${device.address} - Sending missing event : $eventId")
                                 bluetoothBle.writeMessage(device, event.toByteArray())
                             } else {
                                 Log.d("BluetoothReconciliation", "${device.address} - No more events to send")
@@ -107,7 +124,7 @@ class BluetoothReconciliation(var context: Context) {
                     device: BluetoothDevice,
                 ): ByteArray? {
                     Log.d("BluetoothReconciliation", "${device.address} - Received read request")
-                    Log.d("BluetoothReconciliation", "${device.address} - Checking for needed messages")
+                    Log.d("BluetoothReconciliation", "${device.address} - Checking for reconciliation messages")
                     var haveIds = deviceSendIds[device.address]
                     if (haveIds != null) {
                         if (haveIds.isNotEmpty()) {
@@ -149,7 +166,15 @@ class BluetoothReconciliation(var context: Context) {
                                 deviceSendIds[device.address] = result.sendIds.map { it.toHexString() }
                                 Log.d(
                                     "BluetoothReconciliation",
+                                    "${device.address} - Reconciliation message ${result.msgToString()}",
+                                )
+                                Log.d(
+                                    "BluetoothReconciliation",
                                     "${device.address} - Found ${result.sendIds.size} events to send",
+                                )
+                                Log.d(
+                                    "BluetoothReconciliation",
+                                    "${device.address} - Found ${result.needIds.size} events to receive",
                                 )
                             } else {
                                 Log.d("BluetoothReconciliation", "${device.address} - No reconciliation needed")
@@ -223,7 +248,6 @@ class BluetoothReconciliation(var context: Context) {
                 try {
                     val events = db.applicationDao().getEvents()
                     events.forEach {
-                        Log.d("BluetoothReconciliation", "Found event : ${it.createdAt} : ${it.eventId}")
                         insert(it.createdAt, it.eventId)
                     }
                 } finally {
@@ -238,7 +262,7 @@ class BluetoothReconciliation(var context: Context) {
     private fun getEvent(eventId: String): Event {
         val future = CompletableFuture<Event>()
         nostrClient.getEvent(eventId) { event ->
-            Log.d("BluetoothReconciliation", "event ${event.toJson()}")
+            Log.d("BluetoothReconciliation", "Received $eventId")
             future.complete(event)
         }
 

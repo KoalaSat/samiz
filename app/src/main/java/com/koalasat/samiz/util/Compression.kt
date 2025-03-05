@@ -15,7 +15,7 @@ class Compression {
         }
 
         fun splitInChunks(message: ByteArray): Array<ByteArray> {
-            val chunkSize = 512 // define the chunk size
+            val chunkSize = 510 // define the chunk size
             var byteArray = compressByteArray(message)
             val numChunks = (byteArray.size + chunkSize - 1) / chunkSize // calculate the number of chunks
             var chunkIndex = 0

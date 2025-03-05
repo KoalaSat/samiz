@@ -29,7 +29,8 @@ interface BluetoothBleClientCallback {
 
 class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleClientCallback) : Closeable {
     private var deviceGatt = HashMap<String, BluetoothGatt>()
-    private var initialMessages = HashMap<String, Array<ByteArray>>()
+    private var readMessages = HashMap<String, Array<ByteArray>>()
+    private var writeMessages = HashMap<String, Array<ByteArray>>()
 
     @SuppressLint("MissingPermission")
     override fun close() {
@@ -110,10 +111,12 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
 
                 val device = gatt?.device
                 val address = device?.address
-                if (status == BluetoothGatt.GATT_SUCCESS && address != null) {
+                if (status == BluetoothGatt.GATT_SUCCESS && address != null && characteristic != null) {
                     deviceGatt[address] = gatt
                     Log.d("BluetoothBleClient", "$address - Write successful")
-//                    callback.onWriteSuccess(device)
+                    if (!sendNextWriteChunk(device, characteristic)) {
+                        callback.onWriteSuccess(device)
+                    }
                 } else {
                     Log.e("BluetoothBleClient", "$address - Write failed with status $status")
                 }
@@ -157,15 +160,15 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
         if (characteristic != null && address != null) {
             val chunkIndex = jsonBytes[0].toByte()
 
-            Log.d("BluetoothBleClient", "$address - Received chunk $chunkIndex")
-            initialMessages[address] = initialMessages.getOrDefault(address, emptyArray()) + jsonBytes
+            Log.d("BluetoothBleClient", "$address - Received read chunk $chunkIndex")
+            readMessages[address] = readMessages.getOrDefault(address, emptyArray()) + jsonBytes
 
             val totalChunks = jsonBytes[jsonBytes.size - 1].toInt()
-            var chunks = initialMessages.getOrDefault(address, emptyArray())
+            var chunks = readMessages.getOrDefault(address, emptyArray())
             if (totalChunks == chunks.size) {
-                Log.d("BluetoothBleClient", "$address - Last chunk received : total chunks  $totalChunks")
+                Log.d("BluetoothBleClient", "$address - Last read chunk received : total chunks  $totalChunks")
                 val decompressMessage = joinChunks(chunks)
-                initialMessages.remove(address)
+                readMessages.remove(address)
                 return decompressMessage
             } else {
                 gatt.readCharacteristic(characteristic)
@@ -183,15 +186,12 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
     ) {
         Log.d("BluetoothBleClient", "${device.address} - Sending write message")
         val gatt = deviceGatt[device.address]
-        var chunks = splitInChunks(message)
-        Log.d("BluetoothBleClient", "${device.address} - Split into ${chunks.size} chunks")
         if (gatt != null) {
-            chunks.forEachIndexed { index, chunk ->
-                characteristic.value = chunk
-                Log.d("BluetoothBleClient", "${device.address} - Sending chunk $index")
-                gatt.writeCharacteristic(characteristic)
-            }
-            Log.d("BluetoothBleClient", "${device.address} - Sent write message $message")
+            var chunks = splitInChunks(message)
+            writeMessages[device.address] = chunks
+            Log.d("BluetoothBleClient", "${device.address} - Split into ${chunks.size} write chunks")
+
+            sendNextWriteChunk(device, characteristic)
         } else {
             Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
         }
@@ -210,5 +210,31 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
         } else {
             Log.e("BluetoothBleClient", "$address - Gatt not found")
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun sendNextWriteChunk(
+        device: BluetoothDevice,
+        characteristic: BluetoothGattCharacteristic,
+    ): Boolean {
+        val gatt = deviceGatt[device.address]
+        if (gatt != null) {
+            var chunks = writeMessages.getOrDefault(device.address, emptyArray())
+            if (chunks.isNotEmpty()) {
+                characteristic.value = chunks.first()
+                val status = gatt.writeCharacteristic(characteristic)
+                if (status) {
+                    writeMessages[device.address] = chunks.copyOfRange(1, chunks.size)
+                    Log.d("BluetoothBleClient", "${device.address} - Sent write chunk ${chunks.size} - $status")
+                    return true
+                } else {
+                    Log.d("BluetoothBleClient", "${device.address} - Error sending write chunk ${chunks.size}")
+                }
+            } else {
+                Log.d("BluetoothBleClient", "${device.address} - No more write chunks to send")
+            }
+        }
+
+        return false
     }
 }

@@ -118,7 +118,7 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                 if (message != null) {
                     Log.d("BluetoothBleServer", "${device.address} - Created read response : ${String(message)}")
                     var chunks = splitInChunks(message)
-                    Log.d("BluetoothBleServer", "${device.address} - Split into ${chunks.size} chunks")
+                    Log.d("BluetoothBleServer", "${device.address} - Split into ${chunks.size} read chunks")
                     chunks
                 } else {
                     emptyArray()
@@ -130,13 +130,13 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
             readMessages[device.address] = jsonBytes.copyOfRange(1, jsonBytes.size)
 
             val chunkIndex = nextChunk[0].toByte()
-            Log.d("BluetoothBleServer", "${device.address} - Sending Chunk $chunkIndex")
+            Log.d("BluetoothBleServer", "${device.address} - Sending read Chunk $chunkIndex")
 
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, nextChunk)
 
             val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
             if (isLastChunk) {
-                Log.d("BluetoothBleServer", "${device.address} - Last chunk sent")
+                Log.d("BluetoothBleServer", "${device.address} - Last read chunk sent")
                 readMessages.remove(device.address)
             }
         }
@@ -151,13 +151,13 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
         if (address != null) {
             val chunkIndex = message[0].toByte()
 
-            Log.d("BluetoothBle", "$address - Received chunk $chunkIndex")
+            Log.d("BluetoothBle", "$address - Received write chunk $chunkIndex")
             writeMessages[address] = writeMessages.getOrDefault(address, emptyArray()) + message
 
             val totalChunks = message[message.size - 1].toInt()
             var chunks = writeMessages.getOrDefault(address, emptyArray())
             if (totalChunks == chunks.size) {
-                Log.d("BluetoothBle", "$address - Last chunk received")
+                Log.d("BluetoothBle", "$address - Last write chunk received")
 
                 val decompressMessage = joinChunks(chunks)
                 Log.d("BluetoothBle", "$address - Received full write message")
