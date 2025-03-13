@@ -154,10 +154,9 @@ class BluetoothReconciliation(var context: Context) {
                                     Log.d("BluetoothReconciliation", "${device.address} - invalid JSON onReadRequest : $e")
                                     return eventMessage(device, "").toString().toByteArray()
                                 }
-                            } else
-                                {
-                                    Log.d("BluetoothReconciliation", "${device.address} - Event $eventId not found")
-                                }
+                            } else {
+                                Log.d("BluetoothReconciliation", "${device.address} - Event $eventId not found")
+                            }
                         } else {
                             Log.d("BluetoothReconciliation", "${device.address} - No more events to send")
                         }
