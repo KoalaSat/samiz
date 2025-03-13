@@ -80,6 +80,13 @@ Frank decides to leave the party a bit early to pay a visit to Faythe, a tech-sa
 
 # Docs
 
+## Event Flow
+
+![Screenshot from 2025-03-13 17-26-26](https://github.com/user-attachments/assets/4bd4e007-62d5-4ac7-8c6f-d835aafa1473)
+
+Samiz is just the communication layer between local relays, that means that in order to have a full experience you'll require to install your own local relay and use it with your own nostr client.
+
+
 ## BLE Messaging
 
 Samiz utilizes BLE technology to ensure low battery consumption. Because of the limitations of this technology, achieving HTTP-like behavior requires several key considerations:
