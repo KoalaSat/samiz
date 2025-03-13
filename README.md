@@ -82,7 +82,7 @@ Frank decides to leave the party a bit early to pay a visit to Faythe, a tech-sa
 
 ## Event Flow
 
-![Screenshot from 2025-03-13 17-26-26](https://github.com/user-attachments/assets/4bd4e007-62d5-4ac7-8c6f-d835aafa1473)
+![Screenshot from 2025-03-13 17-26-26](https://github.com/user-attachments/assets/d129da33-4662-417b-bf39-b519a3e3f5be)
 
 Samiz is just the communication layer between local relays, that means that in order to have a full experience you'll require to install your own local relay and use it with your own nostr client.
 
