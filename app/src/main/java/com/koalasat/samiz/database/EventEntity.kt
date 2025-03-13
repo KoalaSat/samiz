@@ -5,7 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "notification",
+    tableName = "event",
     indices = [
         Index(
             value = ["eventId"],

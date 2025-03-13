@@ -47,6 +47,9 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
             ) {
                 super.onConnectionStateChange(gatt, status, newState)
                 val address = gatt.device?.address
+                if (address != null) {
+                    deviceGatt[address] = gatt
+                }
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
                         Log.d("BluetoothBleClient", "$address - Connected to GATT server")
