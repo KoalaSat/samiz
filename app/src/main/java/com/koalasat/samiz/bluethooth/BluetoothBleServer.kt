@@ -110,11 +110,10 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
         characteristic: BluetoothGattCharacteristic,
         requestId: Int,
     ) {
-        val jsonBytes =
-            if (readMessages.containsKey(device.address)) {
-                readMessages.getOrDefault(device.address, emptyArray())
-            } else {
-                var message = callback.onReadRequest(device, characteristic)
+        var jsonBytes = readMessages.getOrDefault(device.address, emptyArray())
+        if (jsonBytes.isEmpty()) {
+            var message = callback.onReadRequest(device, characteristic)
+            jsonBytes =
                 if (message != null) {
                     Log.d("BluetoothBleServer", "${device.address} - Created read response : ${String(message)}")
                     var chunks = splitInChunks(message)
@@ -123,7 +122,7 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                 } else {
                     emptyArray()
                 }
-            }
+        }
 
         if (jsonBytes.isNotEmpty()) {
             val nextChunk = jsonBytes.first()
@@ -132,13 +131,15 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
             val chunkIndex = nextChunk[0].toByte()
             Log.d("BluetoothBleServer", "${device.address} - Sending read Chunk $chunkIndex")
 
-            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, nextChunk)
-
             val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
             if (isLastChunk) {
                 Log.d("BluetoothBleServer", "${device.address} - Last read chunk sent")
                 readMessages.remove(device.address)
             }
+
+            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, nextChunk)
+        } else {
+            Log.e("BluetoothBleServer", "${device.address} - Device not found")
         }
     }
 

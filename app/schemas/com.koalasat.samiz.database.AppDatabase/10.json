@@ -2,10 +2,10 @@
   "formatVersion": 1,
   "database": {
     "version": 10,
-    "identityHash": "6a467146f53669e1c93c06e732efadfc",
+    "identityHash": "afad7bea268d1f515bc6c4e86dcef769",
     "entities": [
       {
-        "tableName": "notification",
+        "tableName": "event",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
         "fields": [
           {
@@ -50,7 +50,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6a467146f53669e1c93c06e732efadfc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'afad7bea268d1f515bc6c4e86dcef769')"
     ]
   }
 }
