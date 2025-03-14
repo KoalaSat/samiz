@@ -91,6 +91,7 @@ Samiz is just the communication layer between local relays, that means that in o
 
 Samiz utilizes BLE technology to ensure low battery consumption. Because of the limitations of this technology, achieving HTTP-like behavior requires several key considerations:
 
+
 <div align="center">
 <img src="https://github.com/user-attachments/assets/9c5d0980-1b58-4078-86ef-17366091ef0d" width="600"/>
 </div>
@@ -114,7 +115,7 @@ The same behavior also applies to writing.
 Samiz uses BLE technology and [Negentropy](https://github.com/hoytech/strfry/blob/542552ab0f5234f808c52c21772b34f6f07bec65/docs/negentropy.md) to achieve lower battery consumption and maximum efficiency for device synchronization.
 
 <div align="center">
-<img src="https://github.com/user-attachments/assets/e6202416-5de7-4d4b-a1bf-7f49b693f2aa" width="600"/>
+<img src="https://github.com/user-attachments/assets/e51de501-6cea-4d1c-9828-c9275ab1a4f9" width="600"/>
 </div>
 
 # Sponsors
