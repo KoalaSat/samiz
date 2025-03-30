@@ -56,6 +56,13 @@ class Samiz : Application() {
         private val _isEnabled = MutableLiveData(false)
         val isEnabled: LiveData<Boolean> get() = _isEnabled
 
+        private val _receivedEvents = MutableLiveData(0)
+        val receivedEvents: LiveData<Int> get() = _receivedEvents
+        private val _sentEvents = MutableLiveData(0)
+        val sentEvents: LiveData<Int> get() = _sentEvents
+        private val _foundDevices = MutableLiveData<MutableSet<String>>(mutableSetOf())
+        val foundDevices: LiveData<MutableSet<String>> get() = _foundDevices
+
         @Volatile
         private var instance: Samiz? = null
 
@@ -66,6 +73,22 @@ class Samiz : Application() {
 
         fun updateIsEnabled(value: Boolean) {
             _isEnabled.postValue(value)
+        }
+
+        fun updateReceivedEvents(value: Int) {
+            _receivedEvents.postValue(value)
+        }
+
+        fun updateSentEvents(value: Int) {
+            _sentEvents.postValue(value)
+        }
+
+        fun updateFoundDevices(value: String) {
+            var set = _foundDevices.value
+            if (set != null) {
+                set.add(value)
+                _foundDevices.postValue(set)
+            }
         }
 
         fun isForegroundServiceEnabled(context: Context): Boolean {
