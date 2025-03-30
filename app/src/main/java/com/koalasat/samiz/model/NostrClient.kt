@@ -6,10 +6,10 @@ import com.koalasat.samiz.database.AppDatabase
 import com.koalasat.samiz.database.EventEntity
 import com.vitorpamplona.ammolite.relays.COMMON_FEED_TYPES
 import com.vitorpamplona.ammolite.relays.Client
-import com.vitorpamplona.ammolite.relays.FeedType
 import com.vitorpamplona.ammolite.relays.Relay
 import com.vitorpamplona.ammolite.relays.RelayPool
 import com.vitorpamplona.ammolite.relays.TypedFilter
+import com.vitorpamplona.ammolite.relays.filters.EOSETime
 import com.vitorpamplona.ammolite.relays.filters.SincePerRelayFilter
 import com.vitorpamplona.quartz.events.Event
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +36,7 @@ class NostrClient {
                 ) {
                     Log.d("NostrClient", "New event : ${event.id}")
                     val db = AppDatabase.getDatabase(context, "common")
-                    val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt)
+                    val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
                     db.applicationDao().insertEvent(eventEntity)
                 }
 
@@ -57,12 +57,19 @@ class NostrClient {
         connectRelays()
 
         Log.d("NostrClient", "Sending request")
+        val currentTimeMillis = System.currentTimeMillis()
+        val oneHourAgoMillis = currentTimeMillis - 3600000
+        val oneHourAgoTimestamp = oneHourAgoMillis / 1000
         Client.sendFilter(
             subscriptionSyncId,
             listOf(
                 TypedFilter(
-                    types = setOf(FeedType.PUBLIC_CHATS),
-                    filter = SincePerRelayFilter(limit = 10),
+                    types = COMMON_FEED_TYPES,
+                    filter =
+                        SincePerRelayFilter(
+                            kinds = listOf(1),
+                            since = RelayPool.getAll().associate { it.url to EOSETime(oneHourAgoTimestamp) },
+                        ),
                 ),
             ),
         )
@@ -111,10 +118,16 @@ class NostrClient {
         )
     }
 
-    fun publishEvent(event: Event) {
+    fun publishEvent(
+        event: Event,
+        context: Context,
+    ) {
         CoroutineScope(Dispatchers.Default).launch {
             RelayPool.send(event)
             Log.d("BluetoothReconciliation", "Nostr note published to local relay : ${event.id}")
+            val db = AppDatabase.getDatabase(context, "common")
+            val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 0)
+            db.applicationDao().insertEvent(eventEntity)
         }
     }
 }

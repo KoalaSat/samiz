@@ -13,9 +13,12 @@ interface ApplicationDao {
     @Query("SELECT * FROM event GROUP BY eventId")
     fun getEvents(): List<EventEntity>
 
+    @Query("SELECT * FROM event where local = 0 GROUP BY eventId")
+    fun getExternalEvents(): List<EventEntity>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertEvent(eventEntity: EventEntity): Long?
 
     @Query("DELETE FROM event")
-    fun deleteAll(): Int // Returns the number of rows deleted
+    fun deleteAll(): Int
 }

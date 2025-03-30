@@ -59,13 +59,13 @@ jobs:
           repo/bin/scanapk.php app/build/outputs/apk/debug/app-universal-debug.apk
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Debug APK
           path: app/build/outputs/apk/debug/app-universal-debug.apk
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Build Reports
           path: app/build/reports

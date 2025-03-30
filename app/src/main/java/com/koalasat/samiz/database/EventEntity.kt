@@ -19,4 +19,5 @@ data class EventEntity(
     var id: Long,
     val eventId: String,
     val createdAt: Long,
+    val local: Int,
 )

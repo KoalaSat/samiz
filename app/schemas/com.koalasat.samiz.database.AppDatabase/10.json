@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 10,
-    "identityHash": "afad7bea268d1f515bc6c4e86dcef769",
+    "identityHash": "1f92c25f5f1c382d9fa76bfb2702d541",
     "entities": [
       {
         "tableName": "event",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `local` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -23,6 +23,12 @@
           {
             "fieldPath": "createdAt",
             "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "local",
+            "columnName": "local",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -50,7 +56,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'afad7bea268d1f515bc6c4e86dcef769')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1f92c25f5f1c382d9fa76bfb2702d541')"
     ]
   }
 }
