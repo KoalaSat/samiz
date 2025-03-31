@@ -89,7 +89,7 @@ Samiz is just the communication layer between local relays, that means that in o
 
 ## BLE Messaging
 
-Samiz utilizes BLE technology to ensure low battery consumption. Because of the limitations of this technology, achieving HTTP-like behavior requires several key considerations:
+Samiz utilizes BLE technology to ensure low battery consumption. Because of the limitations of this technology, achieving HTTP-like behavior requires multiple key considerations:
 
 
 <div align="center">
