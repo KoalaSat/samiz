@@ -47,6 +47,15 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         service: BluetoothGattService,
                     ) {
                         super.onServiceAdded(status, service)
+                        Log.d("BluetoothBleServer", "Service added ${service.uuid}")
+                        for (characteristic in service.characteristics) {
+                            Log.d(
+                                "BluetoothBleServer",
+                                "Characteristic: ${characteristic.uuid}, " +
+                                    "Properties: ${characteristic.properties}, " +
+                                    "Permissions: ${characteristic.permissions}",
+                            )
+                        }
                     }
 
                     override fun onCharacteristicReadRequest(
@@ -174,6 +183,18 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
 
     @SuppressLint("MissingPermission")
     fun addService(service: BluetoothGattService) {
-        bluetoothGattServer.addService(service)
+        val status = bluetoothGattServer.addService(service)
+        if (!status) {
+            Log.e("BluetoothBleAdvertiser", "Failed to add service.")
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun notifyAllClients(
+        device: BluetoothDevice,
+        characteristic: BluetoothGattCharacteristic,
+    ) {
+        Log.d("BluetoothBleAdvertiser", "${device.address} - Notifying")
+        bluetoothGattServer.notifyCharacteristicChanged(device, characteristic, false)
     }
 }

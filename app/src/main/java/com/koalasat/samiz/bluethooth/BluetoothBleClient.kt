@@ -47,31 +47,48 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
             ) {
                 super.onConnectionStateChange(gatt, status, newState)
                 val address = gatt.device?.address
-                if (address != null) {
-                    deviceGatt[address] = gatt
-                }
+                Log.d("BluetoothBleClient", "$address - Connection state changed: status=$status newState=$newState")
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
-                        Log.d("BluetoothBleClient", "$address - Connected to GATT server")
                         gatt.requestMtu(bluetoothBle.mtuSize)
-                        gatt.discoverServices()
+                        Log.d("BluetoothBleClient", "$address - Setting MTU")
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
                         Log.d("BluetoothBleClient", "$address - Disconnected from GATT server")
                         deviceGatt.remove(address)
-                        callback.onDisconnection(gatt.device)
                         gatt.close()
+                        callback.onDisconnection(gatt.device)
                     }
                 }
             }
 
             @SuppressLint("MissingPermission")
+            override fun onMtuChanged(
+                gatt: BluetoothGatt?,
+                mtu: Int,
+                status: Int,
+            ) {
+                super.onMtuChanged(gatt, mtu, status)
+                val address = gatt?.device?.address
+                Log.d("BluetoothBleClient", "$address - MTU changed : $mtu")
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (address != null) deviceGatt[address] = gatt
+                    if (gatt != null) {
+                        gatt.discoverServices()
+                        Log.d("BluetoothBleClient", "$address - Discovering services")
+                    }
+                } else {
+                    Log.d("BluetoothBleClient", "$address - Setting MTU failed")
+                }
+            }
+
             override fun onServicesDiscovered(
                 gatt: BluetoothGatt,
                 status: Int,
             ) {
                 super.onServicesDiscovered(gatt, status)
                 val address = gatt.device?.address
+                Log.d("BluetoothBleClient", "$address - Service discovered")
                 Log.d("BluetoothBleClient", "$address - GATT Status: $status")
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     val service = gatt.getService(bluetoothBle.serviceUUID)
@@ -206,12 +223,11 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
         characteristic: BluetoothGattCharacteristic,
     ) {
         val gatt = deviceGatt[device.address]
-        val address = gatt?.device?.address
         if (gatt != null) {
-            Log.d("BluetoothBleClient", "$address - Read sent")
+            Log.d("BluetoothBleClient", "${device.address} - Read sent")
             gatt.readCharacteristic(characteristic)
         } else {
-            Log.e("BluetoothBleClient", "$address - Gatt not found")
+            Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
         }
     }
 

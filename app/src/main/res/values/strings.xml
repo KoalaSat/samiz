@@ -14,4 +14,6 @@
     <string name="foundDevicesCount">Found devices: %1$d</string>
     <string name="eventReceivedCount">Received events: %1$d</string>
     <string name="eventSentCount">Sent events: %1$d</string>
+    <string name="bluethoot_not_supported">This device has no bluethooth.</string>
+    <string name="bluethoot_not_enabled">Samiz can\'t work with bluethoot disabled.</string>
 </resources>

@@ -6,11 +6,13 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
 import java.io.Closeable
+import java.nio.ByteBuffer
 
-class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable {
+class BluetoothBleAdvertiser(var context: Context, private var bluetoothBle: BluetoothBle) : Closeable {
     @SuppressLint("MissingPermission")
     override fun close() {
         bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
@@ -33,14 +35,23 @@ class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable
             )
         writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
+        Log.d("BluetoothBleAdvertiser", "Adding service")
         service.addCharacteristic(readCharacteristic)
         service.addCharacteristic(writeCharacteristic)
         bluetoothBle.addService(service)
 
+        val deviceUuid = bluetoothBle.getDeviceUuid()
         val advertiseData =
             AdvertiseData.Builder()
-                .setIncludeDeviceName(true)
                 .addServiceUuid(ParcelUuid(bluetoothBle.serviceUUID))
+                .addServiceData(
+                    ParcelUuid(bluetoothBle.serviceUUID),
+                    ByteBuffer
+                        .allocate(16)
+                        .putLong(deviceUuid.mostSignificantBits)
+                        .putLong(deviceUuid.leastSignificantBits)
+                        .array(),
+                )
                 .build()
 
         val advertiseSettings =
@@ -51,6 +62,7 @@ class BluetoothBleAdvertiser(private var bluetoothBle: BluetoothBle) : Closeable
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
                 .build()
 
+        Log.d("BluetoothBleAdvertiser", "Start advertising")
         bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback)
     }
 

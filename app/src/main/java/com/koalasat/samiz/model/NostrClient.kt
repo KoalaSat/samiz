@@ -27,7 +27,7 @@ class NostrClient {
 
     fun start(
         context: Context,
-        onEvent: (Event) -> Unit,
+        onSyncEvent: (Event, Boolean) -> Unit,
     ) {
         clientNotificationListener =
             object : Client.Listener {
@@ -41,7 +41,7 @@ class NostrClient {
                     val db = AppDatabase.getDatabase(context, "common")
                     val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
                     db.applicationDao().insertEvent(eventEntity)
-                    onEvent(event)
+                    if (subscriptionId == subscriptionSyncId) onSyncEvent(event, afterEOSE)
                 }
 
                 override fun onError(

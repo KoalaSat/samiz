@@ -118,6 +118,11 @@ Samiz uses BLE technology and [Negentropy](https://github.com/hoytech/strfry/blo
 <img src="https://github.com/user-attachments/assets/e51de501-6cea-4d1c-9828-c9275ab1a4f9" width="600"/>
 </div>
 
+
+## Mesh spread
+
+While two devices are fully in sync and still connected, they stop behaving as a client-server system and will send a write request as soon as a new event is detected on their local relay.
+
 # Sponsors
 
 <div align="center">
