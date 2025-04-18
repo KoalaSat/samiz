@@ -91,12 +91,12 @@ class BluetoothReconciliation(var context: Context) {
                                     "BluetoothReconciliation",
                                     "${device.address} - Found ${result.sendIds.size} events to send",
                                 )
+                                deviceSendIds[device.address] = result.sendIds.map { it.toHexString() }
                                 Log.d(
                                     "BluetoothReconciliation",
                                     "${device.address} - Found ${result.needIds.size} events to receive",
                                 )
                                 if (result.needIds.isNotEmpty()) {
-                                    deviceSendIds[device.address] = result.sendIds.map { it.toHexString() }
                                     sendSubscriptionEvent(device, result.needIds.map { it.toHexString() })
                                 } else {
                                     sendHaveEvent(device)
@@ -382,7 +382,7 @@ class BluetoothReconciliation(var context: Context) {
     }
 
     private fun newLocalEvent(event: Event) {
-        Log.d("BluetoothReconciliation", "deviceSendIds : ${deviceSendIds.size}")
+        Log.d("BluetoothReconciliation", "Queuing to ${deviceSendIds.size} devices")
         deviceSendIds.keys.forEach { key ->
             deviceSendIds[key]?.let { currentList ->
                 if (currentList.isNotEmpty()) {
@@ -394,19 +394,10 @@ class BluetoothReconciliation(var context: Context) {
     }
 
     private fun broadcastEvent(event: Event) {
-        Log.d("BluetoothReconciliation", "Broadcasting to ${bluetoothBle.devices.size} devices")
         bluetoothBle.devices.values.forEach { device ->
             if (!deviceSendIds.keys.contains(device.address)) {
-                deviceSendIds[device.address].let { currentList ->
-                    deviceSendIds[device.address] =
-                        if (currentList == null) {
-                            mutableListOf(device.address)
-                        } else {
-                            currentList.toMutableList().apply { add(device.address) }
-                        }
-                }
-                Log.d("BluetoothReconciliation", "New local event : ${event.id} assigned to ${device.address}")
-                bluetoothBle.notifyAllClients()
+                Log.d("BluetoothReconciliation", "Broadcasting to ${device.address}")
+                writeEvent(device, event)
             }
         }
     }

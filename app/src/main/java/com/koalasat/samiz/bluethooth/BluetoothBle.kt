@@ -87,15 +87,17 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                     device: BluetoothDevice,
                     characteristics: BluetoothGattCharacteristic,
                 ) {
-                    Log.d("BluetoothBle", "Characteristic discovered")
+                    Log.d("BluetoothBle", "${device.address} - Characteristic discovered")
                     if (characteristics.uuid == readCharacteristicUUID) {
                         deviceReadCharacteristic[device.address] = characteristics
-                        Log.d("BluetoothBle", "READ Characteristic discovered")
+                        devices.put(device.address, device)
+                        Log.d("BluetoothBle", "${device.address} - READ Characteristic discovered")
                     } else if (characteristics.uuid == writeCharacteristicUUID) {
                         deviceWriteCharacteristic[device.address] = characteristics
-                        Log.d("BluetoothBle", "WRITE Characteristic discovered")
+                        devices.put(device.address, device)
+                        Log.d("BluetoothBle", "${device.address} - WRITE Characteristic discovered")
                     } else {
-                        Log.d("BluetoothBle", "OTHER Characteristic discovered")
+                        Log.d("BluetoothBle", "${device.address} - OTHER Characteristic discovered")
                     }
 
                     if (deviceReadCharacteristic[device.address] != null &&
@@ -126,7 +128,9 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                     device: BluetoothDevice,
                     characteristics: BluetoothGattCharacteristic,
                 ): ByteArray? {
+                    Log.d("BluetoothBle", "${device.address} - READ request")
                     deviceReadCharacteristic[device.address] = characteristics
+                    devices.put(device.address, device)
                     return callback.onReadRequest(this@BluetoothBle, device)
                 }
 
@@ -135,7 +139,9 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                     characteristics: BluetoothGattCharacteristic,
                     message: ByteArray,
                 ) {
+                    Log.d("BluetoothBle", "${device.address} - WRITE request")
                     deviceWriteCharacteristic[device.address] = characteristics
+                    devices.put(device.address, device)
                     return callback.onWriteRequest(this@BluetoothBle, device, message)
                 }
             },
@@ -206,7 +212,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         if (characteristic != null) {
             bluetoothBleClient.sendWriteMessage(device, characteristic, message)
         } else {
-            Log.e("BluetoothBle", "${device.address} - Characteristic not found")
+            Log.d("BluetoothBle", "${device.address} - Characteristic not found")
         }
     }
 
@@ -244,14 +250,15 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         }
     }
 
-    fun notifyAllClients() {
+    fun notifyDevice() {
         devices.values.forEach {
             Log.d("BluetoothBle", "${it.address} - Sending notification")
             val characteristic = deviceReadCharacteristic[it.address]
             if (characteristic != null) {
+                characteristic.value = "HOLI".toByteArray()
                 bluetoothBleServer.notifyAllClients(it, characteristic)
             } else {
-                Log.e("BluetoothBle", "${it.address} - Read characteristic not found")
+                Log.d("BluetoothBle", "${it.address} - Read characteristic not found")
             }
         }
     }

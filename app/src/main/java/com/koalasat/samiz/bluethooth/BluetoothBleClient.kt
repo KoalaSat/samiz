@@ -213,7 +213,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
 
             sendNextWriteChunk(device, characteristic)
         } else {
-            Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
+            Log.d("BluetoothBleClient", "${device.address} - Gatt not found")
         }
     }
 
@@ -227,7 +227,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
             Log.d("BluetoothBleClient", "${device.address} - Read sent")
             gatt.readCharacteristic(characteristic)
         } else {
-            Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
+            Log.d("BluetoothBleClient", "${device.address} - Gatt not found")
         }
     }
 

@@ -65,7 +65,6 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         characteristic: BluetoothGattCharacteristic,
                     ) {
                         super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-                        Log.d("BluetoothBleServer", "${device.address} - Read request")
                         if (characteristic.uuid.equals(bluetoothBle.readCharacteristicUUID)) {
                             sendReadMessage(device, characteristic, requestId)
                         } else {
