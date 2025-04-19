@@ -83,7 +83,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                         Log.d("BluetoothBleClient", "$address - Discovering services")
                     }
                 } else {
-                    Log.d("BluetoothBleClient", "$address - Setting MTU failed")
+                    Log.e("BluetoothBleClient", "$address - Setting MTU failed")
                 }
             }
 
@@ -99,7 +99,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     val service = gatt.getService(bluetoothBle.serviceUUID)
                     if (service == null || address == null) {
-                        Log.d("BluetoothBleClient", "$address - Service not existing")
+                        Log.e("BluetoothBleClient", "$address - Service not existing")
                     } else {
                         Log.d("BluetoothBleClient", "$address - Discovered Service: ${service.uuid}")
                         val readCharacteristic = service.getCharacteristic(bluetoothBle.readCharacteristicUUID)
@@ -264,7 +264,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
             Log.d("BluetoothBleClient", "${device.address} - Read sent")
             gatt.readCharacteristic(characteristic)
         } else {
-            Log.d("BluetoothBleClient", "${device.address} - Gatt not found")
+            Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
         }
     }
 
@@ -284,7 +284,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                     Log.d("BluetoothBleClient", "${device.address} - Sent write chunk ${chunks.size} - $status")
                     return true
                 } else {
-                    Log.d("BluetoothBleClient", "${device.address} - Error sending write chunk ${chunks.size}")
+                    Log.e("BluetoothBleClient", "${device.address} - Error sending write chunk ${chunks.size}")
                 }
             } else {
                 Log.d("BluetoothBleClient", "${device.address} - No more write chunks to send")

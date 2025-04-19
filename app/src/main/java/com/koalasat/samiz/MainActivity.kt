@@ -92,10 +92,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             if (deniedPermissions.isNotEmpty()) {
-                Log.d("Samiz", "Permissions not granted : $deniedPermissions")
+                Log.e("Samiz", "Permissions not granted : $deniedPermissions")
                 Toast.makeText(applicationContext, getString(R.string.permissions_required), Toast.LENGTH_SHORT).show()
             } else {
-                Log.d("Samiz", "Permissions granted")
+                Log.e("Samiz", "Permissions granted")
                 Samiz.getInstance().startService()
             }
         }
@@ -167,7 +167,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (permissionsToRequest.isNotEmpty()) {
-            Log.d("Samiz", "Permissions not granted: $permissionsToRequest")
+            Log.e("Samiz", "Permissions not granted: $permissionsToRequest")
             ActivityCompat.requestPermissions(
                 this,
                 permissionsToRequest.toTypedArray(),

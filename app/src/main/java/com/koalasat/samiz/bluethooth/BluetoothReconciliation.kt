@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import com.koalasat.samiz.Samiz
 import com.koalasat.samiz.database.AppDatabase
+import com.koalasat.samiz.database.EventEntity
 import com.koalasat.samiz.model.NostrClient
 import com.koalasat.samiz.util.Compression
 import com.vitorpamplona.negentropy.Negentropy
@@ -53,7 +54,7 @@ class BluetoothReconciliation(var context: Context) {
                     device: BluetoothDevice,
                 ) {
                     Log.d("BluetoothReconciliation", "${device.address} - Generating negentropy init message")
-                    deviceNegentropy = getNegentropy()
+                    generateNegentropy()
                     val msg = deviceNegentropy.initiate()
                     val negOpenMsg = negOpenMessage(device, msg)
                     Log.d("BluetoothReconciliation", "${device.address} - Sending OPEN message - $negOpenMsg")
@@ -73,7 +74,7 @@ class BluetoothReconciliation(var context: Context) {
                         type = jsonArray.getString(0)
                         Log.d("BluetoothReconciliation", "${device.address} - Read response received : $jsonArray")
                     } catch (e: JSONException) {
-                        Log.d("BluetoothReconciliation", "${device.address} - invalid JSON onReadResponse : $e")
+                        Log.e("BluetoothReconciliation", "${device.address} - invalid JSON onReadResponse : $e")
                     }
 
                     if (type == "NEG-MSG") {
@@ -81,7 +82,7 @@ class BluetoothReconciliation(var context: Context) {
                         try {
                             msg = jsonArray.getString(2)
                         } catch (e: JSONException) {
-                            Log.d("BluetoothReconciliation", "${device.address} - invalid JSON onReadResponse : $e")
+                            Log.e("BluetoothReconciliation", "${device.address} - invalid JSON onReadResponse : $e")
                         }
                         if (msg != null) {
                             Log.d("BluetoothReconciliation", "${device.address} - Received negentropy reconciliation message")
@@ -105,7 +106,7 @@ class BluetoothReconciliation(var context: Context) {
                                 Log.d("BluetoothReconciliation", "${device.address} - No reconciliation needed")
                             }
                         } else {
-                            Log.d("BluetoothReconciliation", "${device.address} - Bad formated negentropy reconciliation message")
+                            Log.e("BluetoothReconciliation", "${device.address} - Bad formated negentropy reconciliation message")
                         }
                     } else if (type == "EVENT") {
                         try {
@@ -114,7 +115,7 @@ class BluetoothReconciliation(var context: Context) {
                             val event = Event.fromJson(msg)
                             newExternalEvent(event, device)
                         } catch (e: JSONException) {
-                            Log.d("BluetoothReconciliation", "${device.address} - invalid JSON onReadResponse : $e")
+                            Log.e("BluetoothReconciliation", "${device.address} - invalid JSON onReadResponse : $e")
                         }
                         sendHaveEvent(device, true)
                     } else if (type == "EOSE") {
@@ -151,7 +152,7 @@ class BluetoothReconciliation(var context: Context) {
                                     Samiz.updateSentEvents(Samiz.sentEvents.value?.plus(1) ?: 0)
                                     return eventMessage(device, json).toString().toByteArray()
                                 } catch (e: JSONException) {
-                                    Log.d("BluetoothReconciliation", "${device.address} - invalid JSON onReadRequest : $e")
+                                    Log.e("BluetoothReconciliation", "${device.address} - invalid JSON onReadRequest : $e")
                                     return eventMessage(device, "").toString().toByteArray()
                                 }
                             } else {
@@ -182,7 +183,7 @@ class BluetoothReconciliation(var context: Context) {
                     }
                     if (type == "NEG-OPEN") {
                         Log.d("BluetoothReconciliation", "${device.address} - NEG-OPEN")
-                        deviceNegentropy = getNegentropy()
+                        generateNegentropy()
                         val byteArray = Compression.hexStringToByteArray(jsonArray.getString(3))
                         val result = deviceNegentropy.reconcile(byteArray)
                         val msg = result.msg
@@ -201,6 +202,7 @@ class BluetoothReconciliation(var context: Context) {
                     } else if (type == "EVENT") {
                         val msg = jsonArray.getString(2)
                         Log.d("BluetoothReconciliation", "${device.address} - Received missing nostr note : $msg")
+                        Samiz.updateReceivedEvents(Samiz.sentEvents.value?.plus(1) ?: 0)
                         val event = Event.fromJson(msg)
                         newExternalEvent(event, device)
                     } else if (type == "REQ") {
@@ -346,8 +348,8 @@ class BluetoothReconciliation(var context: Context) {
         return jsonArray
     }
 
-    private fun getNegentropy(): Negentropy {
-        var storageVector =
+    private fun generateNegentropy() {
+        val sessionEvents =
             StorageVector().apply {
                 val db = AppDatabase.getDatabase(context, "common")
 
@@ -361,8 +363,8 @@ class BluetoothReconciliation(var context: Context) {
                 }
             }
 
-        Log.d("BluetoothReconciliation", "Negentropy generated for ${storageVector.size()} events")
-        return Negentropy(storageVector, 50_000)
+        Log.d("BluetoothReconciliation", "Negentropy generated for ${sessionEvents.size()} events")
+        deviceNegentropy = Negentropy(sessionEvents, 50_000)
     }
 
     private fun getEvent(eventId: String): Event? {
@@ -420,8 +422,16 @@ class BluetoothReconciliation(var context: Context) {
         device: BluetoothDevice,
     ) {
         Log.d("BluetoothReconciliation", "${device.address} - New External event id : ${event.id}")
-        nostrClient.publishEvent(event, context)
-        Samiz.updateReceivedEvents(Samiz.receivedEvents.value?.plus(1) ?: 0)
-        broadcastEvent(event, device)
+        val db = AppDatabase.getDatabase(context, "common")
+        val existsEvent = db.applicationDao().existsEvent(event.id)
+
+        if (existsEvent < 1) {
+            val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
+            db.applicationDao().insertEvent(eventEntity)
+
+            nostrClient.publishEvent(event, context)
+            generateNegentropy()
+            broadcastEvent(event, null)
+        }
     }
 }

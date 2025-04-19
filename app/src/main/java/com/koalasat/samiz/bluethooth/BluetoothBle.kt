@@ -221,7 +221,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         if (characteristic != null) {
             bluetoothBleClient.sendWriteMessage(device, characteristic, message)
         } else {
-            Log.d("BluetoothBle", "${device.address} - Characteristic not found")
+            Log.e("BluetoothBle", "${device.address} - Characteristic not found")
         }
     }
 
@@ -241,7 +241,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                 Log.d("BluetoothBle", "${device.address} - I AM SERVER")
             }
         } else {
-            Log.d("BluetoothBle", "${device.address} - Known device")
+            Log.e("BluetoothBle", "${device.address} - Known device")
         }
     }
 
