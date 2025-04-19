@@ -28,6 +28,8 @@ interface BluetoothBleClientCallback {
     )
 
     fun onWriteSuccess(device: BluetoothDevice)
+
+    fun onCharacteristicChanged(device: BluetoothDevice)
 }
 
 class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleClientCallback) : Closeable {
@@ -183,8 +185,8 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 characteristic: BluetoothGattCharacteristic,
             ) {
                 super.onCharacteristicChanged(gatt, characteristic)
-                // Handle the response message
-                Log.d("BluetoothBleClient", "Characteristic changed")
+                Log.d("BluetoothBleClient", "${gatt.device?.address} - Characteristic changed")
+                callback.onCharacteristicChanged(gatt.device)
             }
         }
 

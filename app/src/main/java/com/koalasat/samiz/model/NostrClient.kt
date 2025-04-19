@@ -71,7 +71,7 @@ class NostrClient {
                     types = COMMON_FEED_TYPES,
                     filter =
                         SincePerRelayFilter(
-                            kinds = listOf(1),
+                            kinds = listOf(1, 4),
                             since = RelayPool.getAll().associate { it.url to EOSETime(oneHourAgoTimestamp) },
                         ),
                 ),

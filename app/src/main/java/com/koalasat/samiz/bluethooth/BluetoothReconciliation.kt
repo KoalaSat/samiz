@@ -232,6 +232,13 @@ class BluetoothReconciliation(var context: Context) {
                         bluetoothBle.readMessage(device)
                     }
                 }
+
+                override fun onCharacteristicChanged(
+                    bluetoothBle: BluetoothBle,
+                    device: BluetoothDevice,
+                ) {
+                    bluetoothBle.readMessage(device)
+                }
             },
         )
 
