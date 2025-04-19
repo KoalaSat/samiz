@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.util.Log
 import com.koalasat.samiz.util.Compression.Companion.joinChunks
 import com.koalasat.samiz.util.Compression.Companion.splitInChunks
@@ -18,6 +19,8 @@ interface BluetoothBleClientCallback {
         device: BluetoothDevice,
         characteristics: BluetoothGattCharacteristic,
     )
+
+    fun onDescriptorWrite(device: BluetoothDevice)
 
     fun onReadResponse(
         device: BluetoothDevice,
@@ -82,6 +85,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 }
             }
 
+            @SuppressLint("MissingPermission")
             override fun onServicesDiscovered(
                 gatt: BluetoothGatt,
                 status: Int,
@@ -98,13 +102,14 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                         Log.d("BluetoothBleClient", "$address - Discovered Service: ${service.uuid}")
                         val readCharacteristic = service.getCharacteristic(bluetoothBle.readCharacteristicUUID)
                         if (readCharacteristic != null) {
-                            Log.d("BluetoothBleClient", "$address - Read characteristic")
+                            Log.d("BluetoothBleClient", "$address - READ characteristic")
                             deviceGatt[address] = gatt
+                            enableNotification(gatt, readCharacteristic)
                             callback.onCharacteristicDiscovered(gatt.device, readCharacteristic)
                         }
                         val writeCharacteristic = service.getCharacteristic(bluetoothBle.writeCharacteristicUUID)
                         if (writeCharacteristic != null) {
-                            Log.d("BluetoothBleClient", "$address - Read characteristic")
+                            Log.d("BluetoothBleClient", "$address - WRITE characteristic")
                             deviceGatt[address] = gatt
                             callback.onCharacteristicDiscovered(gatt.device, writeCharacteristic)
                         }
@@ -112,13 +117,18 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 }
             }
 
-            override fun onCharacteristicChanged(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
+            override fun onDescriptorWrite(
+                gatt: BluetoothGatt?,
+                descriptor: BluetoothGattDescriptor?,
+                status: Int,
             ) {
-                super.onCharacteristicChanged(gatt, characteristic)
-                // Handle the response message
-                Log.d("BluetoothBleClient", "Characteristic changed")
+                super.onDescriptorWrite(gatt, descriptor, status)
+                if (gatt?.device != null && status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.d("BluetoothBleServer", "${gatt.device.address} - Descriptor write success")
+                    callback.onDescriptorWrite(gatt.device)
+                } else {
+                    Log.e("BluetoothBleServer", "${gatt?.device?.address} - Descriptor write failed")
+                }
             }
 
             @SuppressLint("MissingPermission")
@@ -167,7 +177,32 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                     Log.e("BluetoothBleClient", "$address - Read failed with status $status")
                 }
             }
+
+            override fun onCharacteristicChanged(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+            ) {
+                super.onCharacteristicChanged(gatt, characteristic)
+                // Handle the response message
+                Log.d("BluetoothBleClient", "Characteristic changed")
+            }
         }
+
+    @SuppressLint("MissingPermission")
+    private fun enableNotification(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+    ) {
+        gatt.setCharacteristicNotification(characteristic, true)
+        val descriptor = characteristic.getDescriptor(bluetoothBle.descriptorUUID)
+        if (descriptor != null) {
+            Log.d("BluetoothBleClient", "${gatt.device.address} - Descriptor found")
+            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            gatt.writeDescriptor(descriptor)
+        } else {
+            Log.e("BluetoothBleClient", "${gatt.device.address} - Descriptor not found")
+        }
+    }
 
     @SuppressLint("MissingPermission")
     private fun processReadMessage(

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothGattService
@@ -28,6 +29,9 @@ interface BluetoothBleServerCallback {
 
 class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleServerCallback) : Closeable {
     private lateinit var bluetoothGattServer: BluetoothGattServer
+    private lateinit var deviceReadCharacteristic: BluetoothGattCharacteristic
+    private lateinit var deviceWriteCharacteristic: BluetoothGattCharacteristic
+
     private var readMessages = HashMap<String, Array<ByteArray>>()
     private var writeMessages = HashMap<String, Array<ByteArray>>()
 
@@ -73,6 +77,33 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         }
                     }
 
+                    override fun onDescriptorWriteRequest(
+                        device: BluetoothDevice?,
+                        requestId: Int,
+                        descriptor: BluetoothGattDescriptor?,
+                        preparedWrite: Boolean,
+                        responseNeeded: Boolean,
+                        offset: Int,
+                        value: ByteArray?,
+                    ) {
+                        super.onDescriptorWriteRequest(
+                            device,
+                            requestId,
+                            descriptor,
+                            preparedWrite,
+                            responseNeeded,
+                            offset,
+                            value,
+                        )
+                        if (bluetoothBle.descriptorUUID == descriptor?.uuid) {
+                            Log.d("BluetoothBleServer", "${device?.address} - Descriptor write success")
+                            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null)
+                        } else {
+                            Log.e("BluetoothBleServer", "${device?.address} - Wrong descriptor")
+                            bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null)
+                        }
+                    }
+
                     override fun onCharacteristicWriteRequest(
                         device: BluetoothDevice,
                         requestId: Int,
@@ -110,6 +141,8 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                     }
                 },
             )
+
+        addCharacteristics()
     }
 
     @SuppressLint("MissingPermission")
@@ -160,40 +193,70 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
         if (address != null) {
             val chunkIndex = message[0].toByte()
 
-            Log.d("BluetoothBle", "$address - Received write chunk $chunkIndex")
+            Log.d("BluetoothBleServer", "$address - Received write chunk $chunkIndex")
             writeMessages[address] = writeMessages.getOrDefault(address, emptyArray()) + message
 
             val totalChunks = message[message.size - 1].toInt()
             var chunks = writeMessages.getOrDefault(address, emptyArray())
             if (totalChunks == chunks.size) {
-                Log.d("BluetoothBle", "$address - Last write chunk received")
+                Log.d("BluetoothBleServer", "$address - Last write chunk received")
 
                 val decompressMessage = joinChunks(chunks)
-                Log.d("BluetoothBle", "$address - Received full write message")
+                Log.d("BluetoothBleServer", "$address - Received full write message")
                 writeMessages.remove(address)
                 return decompressMessage
             }
         } else {
-            Log.e("BluetoothBle", "$address - Address not found")
+            Log.e("BluetoothBleServer", "$address - Address not found")
         }
 
         return null
     }
 
     @SuppressLint("MissingPermission")
-    fun addService(service: BluetoothGattService) {
-        val status = bluetoothGattServer.addService(service)
-        if (!status) {
-            Log.e("BluetoothBleAdvertiser", "Failed to add service.")
+    fun notifyClient(device: BluetoothDevice) {
+        deviceReadCharacteristic.value = "HOLI".toByteArray()
+        val success = bluetoothGattServer.notifyCharacteristicChanged(device, deviceReadCharacteristic, false)
+        if (success) {
+            Log.d("BluetoothBleServer", "${device.address} - Notification successfully to send")
+        } else {
+            Log.e("BluetoothBleServer", "${device.address} - Notification failed to sent")
         }
     }
 
     @SuppressLint("MissingPermission")
-    fun notifyAllClients(
-        device: BluetoothDevice,
-        characteristic: BluetoothGattCharacteristic,
-    ) {
-        Log.d("BluetoothBleAdvertiser", "${device.address} - Notifying")
-        bluetoothGattServer.notifyCharacteristicChanged(device, characteristic, false)
+    private fun addCharacteristics() {
+        val service = BluetoothGattService(bluetoothBle.serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+
+        val readCharacteristic =
+            BluetoothGattCharacteristic(
+                bluetoothBle.readCharacteristicUUID,
+                BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_READ,
+                BluetoothGattCharacteristic.PERMISSION_READ,
+            )
+        val descriptor =
+            BluetoothGattDescriptor(
+                bluetoothBle.descriptorUUID,
+                BluetoothGattCharacteristic.PERMISSION_READ or BluetoothGattCharacteristic.PERMISSION_WRITE,
+            )
+        readCharacteristic.addDescriptor(descriptor)
+
+        val writeCharacteristic =
+            BluetoothGattCharacteristic(
+                bluetoothBle.writeCharacteristicUUID,
+                BluetoothGattCharacteristic.PROPERTY_WRITE,
+                BluetoothGattCharacteristic.PERMISSION_WRITE,
+            )
+        writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+
+        Log.d("BluetoothBleAdvertiser", "Adding service")
+        service.addCharacteristic(readCharacteristic)
+        deviceReadCharacteristic = readCharacteristic
+        service.addCharacteristic(writeCharacteristic)
+        deviceWriteCharacteristic = writeCharacteristic
+        val status = bluetoothGattServer.addService(service)
+        if (!status) {
+            Log.e("BluetoothBleServer", "Failed to add service.")
+        }
     }
 }

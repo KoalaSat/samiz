@@ -37,7 +37,7 @@ class NostrClient {
                     relay: Relay,
                     afterEOSE: Boolean,
                 ) {
-                    Log.d("NostrClient", "New event received : ${event.id}")
+                    Log.d("NostrClient", "New local event received : ${event.id}")
                     val db = AppDatabase.getDatabase(context, "common")
                     val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
                     db.applicationDao().insertEvent(eventEntity)
