@@ -15,6 +15,8 @@ import java.io.Closeable
 import kotlin.collections.set
 
 interface BluetoothBleServerCallback {
+    fun onDisconnection(device: BluetoothDevice)
+
     fun onReadRequest(
         device: BluetoothDevice,
         characteristic: BluetoothGattCharacteristic,
@@ -42,10 +44,29 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
 
     @SuppressLint("MissingPermission")
     fun createGattServer() {
+        Log.d("BluetoothBleServer", "Creating GATT Server")
         bluetoothGattServer =
             bluetoothBle.bluetoothManager.openGattServer(
                 bluetoothBle.context,
                 object : BluetoothGattServerCallback() {
+                    override fun onConnectionStateChange(
+                        device: BluetoothDevice?,
+                        status: Int,
+                        newState: Int,
+                    ) {
+                        super.onConnectionStateChange(device, status, newState)
+                        Log.d("BluetoothBleClient", "${device?.address} - Connection state changed: status=$status newState=$newState")
+                        if (device != null) {
+                            val address = device.address
+                            when (newState) {
+                                BluetoothGatt.STATE_DISCONNECTED -> {
+                                    Log.d("BluetoothBleClient", "$address - Disconnected from client")
+                                    callback.onDisconnection(device)
+                                }
+                            }
+                        }
+                    }
+
                     override fun onServiceAdded(
                         status: Int,
                         service: BluetoothGattService,
@@ -226,6 +247,7 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
 
     @SuppressLint("MissingPermission")
     private fun addCharacteristics() {
+        Log.d("BluetoothBleServer", "Creating GATT Service")
         val service = BluetoothGattService(bluetoothBle.serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
         val readCharacteristic =

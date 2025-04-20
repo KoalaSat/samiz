@@ -83,6 +83,8 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
             this,
             object : BluetoothBleClientCallback {
                 override fun onDisconnection(device: BluetoothDevice) {
+                    Log.d("BluetoothBle", "${device.address} - Disconnecting from server")
+                    servers.remove(device.address)
                     deviceReadCharacteristic.remove(device.address)
                     deviceWriteCharacteristic.remove(device.address)
                     connectToDevice(device, null)
@@ -139,6 +141,13 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         BluetoothBleServer(
             this,
             object : BluetoothBleServerCallback {
+                override fun onDisconnection(device: BluetoothDevice) {
+                    Log.d("BluetoothBle", "${device.address} - Disconnecting from client")
+                    clients.remove(device.address)
+                    deviceReadCharacteristic.remove(device.address)
+                    deviceWriteCharacteristic.remove(device.address)
+                }
+
                 override fun onReadRequest(
                     device: BluetoothDevice,
                     characteristics: BluetoothGattCharacteristic,
@@ -196,11 +205,14 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
 
     @SuppressLint("MissingPermission")
     override fun close() {
-        bluetoothBleClient.close()
-        bluetoothBleServer.close()
-
-        bluetoothBleAdvertiser.close()
-        bluetoothBleScanner.close()
+        try {
+            bluetoothBleClient.close()
+            bluetoothBleServer.close()
+            bluetoothBleAdvertiser.close()
+            bluetoothBleScanner.close()
+        } catch (e: Exception) {
+            Log.e("BluetoothBle", "Exception while closing: ${e.message}")
+        }
     }
 
     fun readMessage(device: BluetoothDevice) {
@@ -230,7 +242,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         device: BluetoothDevice,
         remoteUuid: UUID?,
     ) {
-        Log.d("BluetoothBle", "${device.address} - connectToDevice")
+        Log.d("BluetoothBle", "${device.address} - Handling device role:")
         if (!clients.contains(device.address) && !servers.contains(device.address)) {
             Samiz.updateFoundDevices(remoteUuid.toString())
             if (remoteUuid == null || remoteUuid > getDeviceUuid()) {
@@ -240,8 +252,6 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
             } else {
                 Log.d("BluetoothBle", "${device.address} - I AM SERVER")
             }
-        } else {
-            Log.e("BluetoothBle", "${device.address} - Known device")
         }
     }
 

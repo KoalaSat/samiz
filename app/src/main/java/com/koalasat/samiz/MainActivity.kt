@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -20,10 +21,12 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.koalasat.samiz.databinding.ActivityMainBinding
+import com.koalasat.samiz.service.BluetoothStateReceiver
 
 class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
 
     private val requestCodePermissions = 1001
     private val requiredPermissions =
@@ -74,8 +77,17 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        checkAndRequestPermissions()
+        bluetoothStateReceiver = BluetoothStateReceiver()
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        registerReceiver(bluetoothStateReceiver, filter)
+
         enableBluetooth()
+        checkAndRequestPermissions()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(bluetoothStateReceiver)
     }
 
     override fun onRequestPermissionsResult(

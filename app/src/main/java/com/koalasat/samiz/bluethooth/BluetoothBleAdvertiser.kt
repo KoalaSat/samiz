@@ -14,6 +14,12 @@ class BluetoothBleAdvertiser(var context: Context, private var bluetoothBle: Blu
     @SuppressLint("MissingPermission")
     override fun close() {
         bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
+        val bluetoothAdapter = bluetoothBle.bluetoothManager.adapter
+        if (bluetoothAdapter != null && bluetoothAdapter.isEnabled) {
+            bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.stopAdvertising(advertiseCallback)
+        } else {
+            Log.w("BluetoothBleAdvertiser", "Cannot stop advertising: Bluetooth is off.")
+        }
     }
 
     @SuppressLint("MissingPermission")

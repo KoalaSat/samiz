@@ -79,6 +79,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     if (address != null) deviceGatt[address] = gatt
                     if (gatt != null) {
+                        gatt.refresh()
                         gatt.discoverServices()
                         Log.d("BluetoothBleClient", "$address - Discovering services")
                     }
@@ -96,9 +97,9 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 val address = gatt.device?.address
                 Log.d("BluetoothBleClient", "$address - Service discovered")
                 Log.d("BluetoothBleClient", "$address - GATT Status: $status")
-                if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (status == BluetoothGatt.GATT_SUCCESS && address != null) {
                     val service = gatt.getService(bluetoothBle.serviceUUID)
-                    if (service == null || address == null) {
+                    if (service == null) {
                         Log.e("BluetoothBleClient", "$address - Service not existing")
                     } else {
                         Log.d("BluetoothBleClient", "$address - Discovered Service: ${service.uuid}")
@@ -116,6 +117,8 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                             callback.onCharacteristicDiscovered(gatt.device, writeCharacteristic)
                         }
                     }
+                } else {
+                    Log.e("BluetoothBleClient", "$address - Error with GATT")
                 }
             }
 
@@ -292,5 +295,17 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
         }
 
         return false
+    }
+}
+
+fun BluetoothGatt.refresh(): Boolean {
+    return try {
+        val refresh =
+            this.javaClass.getMethod("refresh").apply {
+                isAccessible = true
+            }
+        refresh.invoke(this) as Boolean
+    } catch (e: Exception) {
+        false
     }
 }
