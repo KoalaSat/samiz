@@ -27,7 +27,7 @@ class NostrClient {
 
     fun start(
         context: Context,
-        onEvent: (Event) -> Unit,
+        onSyncEvent: (Event, Boolean) -> Unit,
     ) {
         clientNotificationListener =
             object : Client.Listener {
@@ -37,11 +37,11 @@ class NostrClient {
                     relay: Relay,
                     afterEOSE: Boolean,
                 ) {
-                    Log.d("NostrClient", "New event received : ${event.id}")
+                    Log.d("NostrClient", "New local event received : ${event.id}")
                     val db = AppDatabase.getDatabase(context, "common")
                     val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
                     db.applicationDao().insertEvent(eventEntity)
-                    onEvent(event)
+                    if (subscriptionId == subscriptionSyncId) onSyncEvent(event, afterEOSE)
                 }
 
                 override fun onError(
@@ -71,7 +71,7 @@ class NostrClient {
                     types = COMMON_FEED_TYPES,
                     filter =
                         SincePerRelayFilter(
-                            kinds = listOf(1),
+                            kinds = listOf(1, 4),
                             since = RelayPool.getAll().associate { it.url to EOSETime(oneHourAgoTimestamp) },
                         ),
                 ),

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.util.Log
 import com.koalasat.samiz.util.Compression.Companion.joinChunks
 import com.koalasat.samiz.util.Compression.Companion.splitInChunks
@@ -19,12 +20,16 @@ interface BluetoothBleClientCallback {
         characteristics: BluetoothGattCharacteristic,
     )
 
+    fun onDescriptorWrite(device: BluetoothDevice)
+
     fun onReadResponse(
         device: BluetoothDevice,
         message: ByteArray,
     )
 
     fun onWriteSuccess(device: BluetoothDevice)
+
+    fun onCharacteristicChanged(device: BluetoothDevice)
 }
 
 class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleClientCallback) : Closeable {
@@ -47,21 +52,39 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
             ) {
                 super.onConnectionStateChange(gatt, status, newState)
                 val address = gatt.device?.address
-                if (address != null) {
-                    deviceGatt[address] = gatt
-                }
+                Log.d("BluetoothBleClient", "$address - Connection state changed: status=$status newState=$newState")
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
-                        Log.d("BluetoothBleClient", "$address - Connected to GATT server")
                         gatt.requestMtu(bluetoothBle.mtuSize)
-                        gatt.discoverServices()
+                        Log.d("BluetoothBleClient", "$address - Setting MTU")
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
                         Log.d("BluetoothBleClient", "$address - Disconnected from GATT server")
                         deviceGatt.remove(address)
-                        callback.onDisconnection(gatt.device)
                         gatt.close()
+                        callback.onDisconnection(gatt.device)
                     }
+                }
+            }
+
+            @SuppressLint("MissingPermission")
+            override fun onMtuChanged(
+                gatt: BluetoothGatt?,
+                mtu: Int,
+                status: Int,
+            ) {
+                super.onMtuChanged(gatt, mtu, status)
+                val address = gatt?.device?.address
+                Log.d("BluetoothBleClient", "$address - MTU changed : $mtu")
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (address != null) deviceGatt[address] = gatt
+                    if (gatt != null) {
+                        gatt.refresh()
+                        gatt.discoverServices()
+                        Log.d("BluetoothBleClient", "$address - Discovering services")
+                    }
+                } else {
+                    Log.e("BluetoothBleClient", "$address - Setting MTU failed")
                 }
             }
 
@@ -72,36 +95,45 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
             ) {
                 super.onServicesDiscovered(gatt, status)
                 val address = gatt.device?.address
+                Log.d("BluetoothBleClient", "$address - Service discovered")
                 Log.d("BluetoothBleClient", "$address - GATT Status: $status")
-                if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (status == BluetoothGatt.GATT_SUCCESS && address != null) {
                     val service = gatt.getService(bluetoothBle.serviceUUID)
-                    if (service == null || address == null) {
-                        Log.d("BluetoothBleClient", "$address - Service not existing")
+                    if (service == null) {
+                        Log.e("BluetoothBleClient", "$address - Service not existing")
                     } else {
                         Log.d("BluetoothBleClient", "$address - Discovered Service: ${service.uuid}")
                         val readCharacteristic = service.getCharacteristic(bluetoothBle.readCharacteristicUUID)
                         if (readCharacteristic != null) {
-                            Log.d("BluetoothBleClient", "$address - Read characteristic")
+                            Log.d("BluetoothBleClient", "$address - READ characteristic")
                             deviceGatt[address] = gatt
+                            enableNotification(gatt, readCharacteristic)
                             callback.onCharacteristicDiscovered(gatt.device, readCharacteristic)
                         }
                         val writeCharacteristic = service.getCharacteristic(bluetoothBle.writeCharacteristicUUID)
                         if (writeCharacteristic != null) {
-                            Log.d("BluetoothBleClient", "$address - Read characteristic")
+                            Log.d("BluetoothBleClient", "$address - WRITE characteristic")
                             deviceGatt[address] = gatt
                             callback.onCharacteristicDiscovered(gatt.device, writeCharacteristic)
                         }
                     }
+                } else {
+                    Log.e("BluetoothBleClient", "$address - Error with GATT")
                 }
             }
 
-            override fun onCharacteristicChanged(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
+            override fun onDescriptorWrite(
+                gatt: BluetoothGatt?,
+                descriptor: BluetoothGattDescriptor?,
+                status: Int,
             ) {
-                super.onCharacteristicChanged(gatt, characteristic)
-                // Handle the response message
-                Log.d("BluetoothBleClient", "Characteristic changed")
+                super.onDescriptorWrite(gatt, descriptor, status)
+                if (gatt?.device != null && status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.d("BluetoothBleServer", "${gatt.device.address} - Descriptor write success")
+                    callback.onDescriptorWrite(gatt.device)
+                } else {
+                    Log.e("BluetoothBleServer", "${gatt?.device?.address} - Descriptor write failed")
+                }
             }
 
             @SuppressLint("MissingPermission")
@@ -150,7 +182,32 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                     Log.e("BluetoothBleClient", "$address - Read failed with status $status")
                 }
             }
+
+            override fun onCharacteristicChanged(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+            ) {
+                super.onCharacteristicChanged(gatt, characteristic)
+                Log.d("BluetoothBleClient", "${gatt.device?.address} - Characteristic changed")
+                callback.onCharacteristicChanged(gatt.device)
+            }
         }
+
+    @SuppressLint("MissingPermission")
+    private fun enableNotification(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+    ) {
+        gatt.setCharacteristicNotification(characteristic, true)
+        val descriptor = characteristic.getDescriptor(bluetoothBle.descriptorUUID)
+        if (descriptor != null) {
+            Log.d("BluetoothBleClient", "${gatt.device.address} - Descriptor found")
+            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            gatt.writeDescriptor(descriptor)
+        } else {
+            Log.e("BluetoothBleClient", "${gatt.device.address} - Descriptor not found")
+        }
+    }
 
     @SuppressLint("MissingPermission")
     private fun processReadMessage(
@@ -196,7 +253,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
 
             sendNextWriteChunk(device, characteristic)
         } else {
-            Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
+            Log.d("BluetoothBleClient", "${device.address} - Gatt not found")
         }
     }
 
@@ -206,12 +263,11 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
         characteristic: BluetoothGattCharacteristic,
     ) {
         val gatt = deviceGatt[device.address]
-        val address = gatt?.device?.address
         if (gatt != null) {
-            Log.d("BluetoothBleClient", "$address - Read sent")
+            Log.d("BluetoothBleClient", "${device.address} - Read sent")
             gatt.readCharacteristic(characteristic)
         } else {
-            Log.e("BluetoothBleClient", "$address - Gatt not found")
+            Log.e("BluetoothBleClient", "${device.address} - Gatt not found")
         }
     }
 
@@ -231,7 +287,7 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                     Log.d("BluetoothBleClient", "${device.address} - Sent write chunk ${chunks.size} - $status")
                     return true
                 } else {
-                    Log.d("BluetoothBleClient", "${device.address} - Error sending write chunk ${chunks.size}")
+                    Log.e("BluetoothBleClient", "${device.address} - Error sending write chunk ${chunks.size}")
                 }
             } else {
                 Log.d("BluetoothBleClient", "${device.address} - No more write chunks to send")
@@ -239,5 +295,17 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
         }
 
         return false
+    }
+}
+
+fun BluetoothGatt.refresh(): Boolean {
+    return try {
+        val refresh =
+            this.javaClass.getMethod("refresh").apply {
+                isAccessible = true
+            }
+        refresh.invoke(this) as Boolean
+    } catch (e: Exception) {
+        false
     }
 }

@@ -1,6 +1,10 @@
 package com.koalasat.samiz
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,10 +21,12 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.koalasat.samiz.databinding.ActivityMainBinding
+import com.koalasat.samiz.service.BluetoothStateReceiver
 
 class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var bluetoothStateReceiver: BluetoothStateReceiver
 
     private val requestCodePermissions = 1001
     private val requiredPermissions =
@@ -41,6 +47,12 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_ADVERTISE,
             Manifest.permission.BLUETOOTH_CONNECT,
+        )
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val requiredPermissions33 =
+        arrayOf(
+            Manifest.permission.POST_NOTIFICATIONS,
         )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +77,17 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+        bluetoothStateReceiver = BluetoothStateReceiver()
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        registerReceiver(bluetoothStateReceiver, filter)
+
+        enableBluetooth()
         checkAndRequestPermissions()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(bluetoothStateReceiver)
     }
 
     override fun onRequestPermissionsResult(
@@ -82,11 +104,27 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             if (deniedPermissions.isNotEmpty()) {
-                Log.d("Samiz", "Permissions not granted : $deniedPermissions")
+                Log.e("Samiz", "Permissions not granted : $deniedPermissions")
                 Toast.makeText(applicationContext, getString(R.string.permissions_required), Toast.LENGTH_SHORT).show()
             } else {
-                Log.d("Samiz", "Permissions granted")
+                Log.e("Samiz", "Permissions granted")
                 Samiz.getInstance().startService()
+            }
+        }
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                Log.d("Samiz", "Bluethooth enabled")
+                Samiz.getInstance().startService()
+            } else {
+                Toast.makeText(applicationContext, getString(R.string.bluethoot_not_enabled), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -95,6 +133,17 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         return navController.navigateUp(appBarConfiguration) ||
             super.onSupportNavigateUp()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun enableBluetooth() {
+        val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+        if (bluetoothAdapter == null) {
+            Toast.makeText(applicationContext, getString(R.string.bluethoot_not_supported), Toast.LENGTH_SHORT).show()
+        } else if (!bluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBtIntent, 1)
+        }
     }
 
     private fun checkAndRequestPermissions() {
@@ -106,6 +155,14 @@ class MainActivity : AppCompatActivity() {
             },
         )
 
+        // Add required permissions for Android 14 (API level 33) and higher
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionsToRequest.addAll(
+                requiredPermissions33.filter {
+                    ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+                },
+            )
+        }
         // Add required permissions for Android 12 (API level 31) and higher
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             permissionsToRequest.addAll(
@@ -122,7 +179,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (permissionsToRequest.isNotEmpty()) {
-            Log.d("Samiz", "Permissions not granted: $permissionsToRequest")
+            Log.e("Samiz", "Permissions not granted: $permissionsToRequest")
             ActivityCompat.requestPermissions(
                 this,
                 permissionsToRequest.toTypedArray(),

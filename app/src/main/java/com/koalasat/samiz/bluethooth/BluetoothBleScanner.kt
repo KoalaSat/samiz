@@ -9,12 +9,19 @@ import android.bluetooth.le.ScanSettings
 import android.os.ParcelUuid
 import android.util.Log
 import java.io.Closeable
+import java.nio.ByteBuffer
+import java.util.UUID
 
 interface BluetoothBleScannerCallback {
-    fun onDeviceFound(device: BluetoothDevice)
+    fun onDeviceFound(
+        device: BluetoothDevice,
+        remoteUuid: UUID,
+    )
 }
 
 class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val callback: BluetoothBleScannerCallback) : Closeable {
+    private val discovered = mutableSetOf<String>()
+
     @SuppressLint("MissingPermission")
     override fun close() {
         bluetoothBle.bluetoothManager.adapter.bluetoothLeScanner.stopScan(scanCallback)
@@ -42,8 +49,21 @@ class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val ca
                 result: ScanResult,
             ) {
                 super.onScanResult(callbackType, result)
-                val device = result.device
-                callback.onDeviceFound(device)
+                val serviceData = result.scanRecord?.getServiceData(ParcelUuid(bluetoothBle.serviceUUID))
+
+                if (serviceData != null) {
+                    val buffer = ByteBuffer.wrap(serviceData)
+                    val remoteUuid = UUID(buffer.long, buffer.long)
+                    val key = result.device.address + remoteUuid
+                    if (key in discovered) return
+
+                    Log.d("BluetoothBleScanner", "${result.device.address} - Service data found")
+                    discovered += key
+
+                    callback.onDeviceFound(result.device, remoteUuid)
+                } else {
+                    Log.e("BluetoothBleScanner", "${result.device.address} - Service data not found")
+                }
             }
 
             override fun onScanFailed(errorCode: Int) {
