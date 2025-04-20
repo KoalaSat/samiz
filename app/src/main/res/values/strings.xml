@@ -10,7 +10,7 @@
     <string name="samiz_is_running_in_background">Samiz is running in background</string>
     <string name="sync_service">Sync Service</string>
     <string name="start">Test</string>
-    <string name="instructions">"Instructions for alpha testing:\n1. Install a nostr client (i.e. Amethyst)\n2. Install a local relay (i.e. Citrine)\n3. Connect your client to your local relay\n4. Turn off internet in any number of devices\n5. Start Samiz (do it now for real time sync testing or after step 6 for Negentropy testing.\n6. Write a note in your offline device\n\nNote: This version works with a mesh of any number of devices"</string>
+    <string name="instructions">"Instructions for alpha testing:\n1. Install a nostr client (i.e. Amethyst)\n2. Install a local relay (i.e. Citrine)\n3. Connect your client to your local relay\n4. Turn off internet in any number of devices\n5. Start Samiz (do it now for real time sync testing or after step 6 for Negentropy testing)\n6. Write a note in your offline device\n\nNote: This version works with a mesh of any number of devices"</string>
     <string name="foundDevicesCount">Found devices: %1$d</string>
     <string name="eventReceivedCount">Received events: %1$d</string>
     <string name="eventSentCount">Sent events: %1$d</string>
