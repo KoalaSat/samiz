@@ -40,10 +40,10 @@ class BluetoothBleAdvertiser(var context: Context, private var bluetoothBle: Blu
 
         val advertiseSettings =
             AdvertiseSettings.Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
                 .setConnectable(true)
                 .setTimeout(0)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
                 .build()
 
         Log.d("BluetoothBleAdvertiser", "Start advertising")
