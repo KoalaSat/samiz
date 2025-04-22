@@ -8,9 +8,12 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -82,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(bluetoothStateReceiver, filter)
 
         enableBluetooth()
+        disableBatteryOptimizer()
         checkAndRequestPermissions()
     }
 
@@ -143,6 +147,22 @@ class MainActivity : AppCompatActivity() {
         } else if (!bluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, 1)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun disableBatteryOptimizer() {
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.disableBatteryOptimizerTitle))
+                .setMessage(getString(R.string.disableBatteryOptimizerMessage))
+                .setPositiveButton(getString(R.string.disableBatteryOptimizerAccept)) { _, _ ->
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    startActivity(intent)
+                }
+                .setNegativeButton(getString(R.string.disableBatteryOptimizerCancel), null)
+                .show()
         }
     }
 

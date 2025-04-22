@@ -55,8 +55,11 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 Log.d("BluetoothBleClient", "$address - Connection state changed: status=$status newState=$newState")
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
-                        gatt.requestMtu(bluetoothBle.mtuSize)
+                        gatt.refresh()
+                        Log.d("BluetoothBleClient", "$address - Setting connection priority")
+                        gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH)
                         Log.d("BluetoothBleClient", "$address - Setting MTU")
+                        gatt.requestMtu(bluetoothBle.mtuSize)
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
                         Log.d("BluetoothBleClient", "$address - Disconnected from GATT server")
@@ -79,7 +82,6 @@ class BluetoothBleClient(private var bluetoothBle: BluetoothBle, private val cal
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     if (address != null) deviceGatt[address] = gatt
                     if (gatt != null) {
-                        gatt.refresh()
                         gatt.discoverServices()
                         Log.d("BluetoothBleClient", "$address - Discovering services")
                     }

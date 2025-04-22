@@ -36,7 +36,7 @@ class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val ca
 
         val scanSettings =
             ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                 .build()
 
         bluetoothBle.bluetoothManager.adapter.bluetoothLeScanner.startScan(listOf(scanFilter), scanSettings, scanCallback)
@@ -62,7 +62,7 @@ class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val ca
 
                     callback.onDeviceFound(result.device, remoteUuid)
                 } else {
-                    Log.e("BluetoothBleScanner", "${result.device.address} - Service data not found")
+                    Log.d("BluetoothBleScanner", "${result.device.address} - Service data not found")
                 }
             }
 
