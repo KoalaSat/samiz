@@ -70,7 +70,7 @@ As the festival continues, everyone is having a great time and starting to captu
 Frank decides to leave the party a bit early to pay a visit to Faythe, a tech-savvy individual who has a reliable satellite internet connection.
 
 1. Faythe is running a Samiz session.
-2. As soon as Frank arrives at the house, their devices automatically synchronize and Faythe receives all the nostr notes received by Bob while he was at the party.
+2. As soon as Frank arrives at the house, their devices automatically synchronize and Faythe receives all the nostr notes collected by Bob while he was at the party.
 3. Once the synchronization is complete, and because Faythe is connected to the internet, his Samiz app begins publishing the notes to his preferred nostr relays.
 4. Mike, who lives in another country, can now access all the notes about the party published by Faythe through the nostr relays.
 
