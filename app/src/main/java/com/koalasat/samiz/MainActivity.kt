@@ -112,7 +112,6 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, getString(R.string.permissions_required), Toast.LENGTH_SHORT).show()
             } else {
                 Log.e("Samiz", "Permissions granted")
-                Samiz.getInstance().startService()
             }
         }
     }
@@ -126,7 +125,6 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
                 Log.d("Samiz", "Bluethooth enabled")
-                Samiz.getInstance().startService()
             } else {
                 Toast.makeText(applicationContext, getString(R.string.bluethoot_not_enabled), Toast.LENGTH_SHORT).show()
             }
@@ -207,7 +205,6 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             Log.d("Samiz", "Permissions already granted: API V${Build.VERSION.SDK_INT}")
-            Samiz.getInstance().startService()
         }
     }
 }

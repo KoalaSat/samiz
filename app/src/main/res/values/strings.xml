@@ -20,4 +20,7 @@
     <string name="disableBatteryOptimizerMessage">To keep the Bluetooth connection stable, please disable battery optimization for Samiz.</string>
     <string name="disableBatteryOptimizerAccept">Go to settings</string>
     <string name="disableBatteryOptimizerCancel">Cancel</string>
+    <string name="start_session">Start Session</string>
+    <string name="stop_session">Stop Session</string>
+    <string name="local_relay_not_found">Local relay not found. Make sure it is started and available in port :4869.</string>
 </resources>

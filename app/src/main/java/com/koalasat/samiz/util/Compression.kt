@@ -26,7 +26,7 @@ class Compression {
                 val end = minOf((i + 1) * chunkSize, byteArray.size)
                 val chunk = byteArray.copyOfRange(start, end)
 
-                // add chunk index to the first byte and last chunk flag to the last byte
+                // add chunk index to the first 2 bytes and last chunk flag to the last byte
                 val chunkWithIndex = ByteArray(chunk.size + 2)
                 chunkWithIndex[0] = chunkIndex.toByte() // chunk index
                 chunk.copyInto(chunkWithIndex, 1)
