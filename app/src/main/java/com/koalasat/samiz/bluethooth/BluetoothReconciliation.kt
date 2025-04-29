@@ -112,6 +112,7 @@ class BluetoothReconciliation(var context: Context) {
                         try {
                             val msg = jsonArray.getString(2)
                             Log.d("BluetoothReconciliation", "${device.address} - Received missing nostr note : $msg")
+                            Samiz.updateReceivedEvents(Samiz.sentEvents.value?.plus(1) ?: 0)
                             val event = Event.fromJson(msg)
                             newExternalEvent(event, device)
                         } catch (e: JSONException) {
