@@ -6,7 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.koalasat.samiz.service.SynchronizationService
@@ -19,16 +22,16 @@ import kotlin.jvm.java
 
 class Samiz : Application() {
     private val applicationIOScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
         super.onCreate()
         instance = this
-
-        updateIsEnabled(isForegroundServiceEnabled(this))
     }
 
     override fun onTerminate() {
         super.onTerminate()
+        stopService()
         applicationIOScope.cancel()
     }
 
@@ -40,14 +43,22 @@ class Samiz : Application() {
         } else {
             startService(serviceIntent)
         }
-
+        updateIsEnabled(true)
         saveForegroundServicePreference(this@Samiz, true)
     }
 
     fun stopService() {
         val intent = Intent(applicationContext, SynchronizationService::class.java)
         applicationContext.stopService(intent)
+        updateIsEnabled(false)
         saveForegroundServicePreference(this, false)
+    }
+
+    fun relayError() {
+        stopService()
+        mainHandler.post {
+            Toast.makeText(applicationContext, getString(R.string.local_relay_not_found), Toast.LENGTH_LONG).show()
+        }
     }
 
     fun contentResolverFn(): ContentResolver = contentResolver

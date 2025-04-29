@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.koalasat.samiz.R
@@ -26,8 +27,35 @@ class HomeFragment : Fragment() {
         val homeViewModel =
             ViewModelProvider(this)[HomeViewModel::class.java]
 
+        binding.btnStart.setOnClickListener {
+            if (Samiz.isEnabled.value == true) {
+                Samiz.getInstance().stopService()
+            } else {
+                Samiz.getInstance().startService()
+            }
+        }
+
+        // Update button text based on current service state
+        Samiz.isEnabled.observe(viewLifecycleOwner) { isEnabled ->
+            binding.btnStart.text =
+                if (isEnabled == true) {
+                    getString(R.string.stop_session)
+                } else {
+                    getString(R.string.start_session)
+                }
+
+            if (isEnabled) {
+                if (binding.logo.animation == null) {
+                    val rotateAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.rotate_animation)
+                    binding.logo.startAnimation(rotateAnimation)
+                }
+            } else {
+                binding.logo.clearAnimation()
+            }
+        }
+
         binding.eventReceivedCount.text = getString(R.string.eventReceivedCount, Samiz.receivedEvents.value)
-        binding.eventSentCount.text = getString(R.string.eventSentCount, Samiz.receivedEvents.value)
+        binding.eventSentCount.text = getString(R.string.eventSentCount, Samiz.sentEvents.value)
         binding.foundDevicesCount.text =
             getString(
                 R.string.foundDevicesCount,
@@ -37,9 +65,11 @@ class HomeFragment : Fragment() {
         Samiz.receivedEvents.observe(viewLifecycleOwner) {
             binding.eventReceivedCount.text = getString(R.string.eventReceivedCount, Samiz.receivedEvents.value)
         }
+
         Samiz.sentEvents.observe(viewLifecycleOwner) {
             binding.eventSentCount.text = getString(R.string.eventSentCount, Samiz.sentEvents.value)
         }
+
         Samiz.foundDevices.observe(viewLifecycleOwner) {
             binding.foundDevicesCount.text =
                 getString(

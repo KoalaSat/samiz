@@ -2,6 +2,7 @@ package com.koalasat.samiz.model
 
 import android.content.Context
 import android.util.Log
+import com.koalasat.samiz.Samiz
 import com.koalasat.samiz.database.AppDatabase
 import com.koalasat.samiz.database.EventEntity
 import com.vitorpamplona.ammolite.relays.COMMON_FEED_TYPES
@@ -50,6 +51,7 @@ class NostrClient {
                     relay: Relay,
                 ) {
                     Log.d("NostrClient", "Relay connection error : $error")
+                    Samiz.getInstance().relayError()
                 }
             }
 
