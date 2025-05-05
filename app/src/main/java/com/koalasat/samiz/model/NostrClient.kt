@@ -7,6 +7,7 @@ import com.koalasat.samiz.database.AppDatabase
 import com.koalasat.samiz.database.EventEntity
 import com.vitorpamplona.ammolite.relays.COMMON_FEED_TYPES
 import com.vitorpamplona.ammolite.relays.Client
+import com.vitorpamplona.ammolite.relays.EVENT_FINDER_TYPES
 import com.vitorpamplona.ammolite.relays.Relay
 import com.vitorpamplona.ammolite.relays.RelayPool
 import com.vitorpamplona.ammolite.relays.TypedFilter
@@ -18,7 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class NostrClient {
-    private var subscriptionSyncId = "samizSync"
+    private var subscriptionSyncEventsId = "samizSync"
+    private var subscriptionSyncPrivateId = "samizPrivate"
+    private var subscriptionSyncMetaId = "samizMeta"
     private var subscriptionEventId = "samizEvent"
     private var defaultRelayUrls =
         listOf(
@@ -42,7 +45,7 @@ class NostrClient {
                     val db = AppDatabase.getDatabase(context, "common")
                     val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
                     db.applicationDao().insertEvent(eventEntity)
-                    if (subscriptionId == subscriptionSyncId) onSyncEvent(event, afterEOSE)
+                    if (subscriptionId != subscriptionEventId) onSyncEvent(event, afterEOSE)
                 }
 
                 override fun onError(
@@ -65,16 +68,40 @@ class NostrClient {
         Log.d("NostrClient", "Sending request")
         val currentTimeMillis = System.currentTimeMillis()
         val oneHourAgoMillis = currentTimeMillis - 3600000
-        val oneHourAgoTimestamp = oneHourAgoMillis / 1000
+        val twoDaysAgoMillis = currentTimeMillis - 172800000
         Client.sendFilter(
-            subscriptionSyncId,
+            subscriptionSyncEventsId,
             listOf(
                 TypedFilter(
                     types = COMMON_FEED_TYPES,
                     filter =
                         SincePerRelayFilter(
-                            kinds = listOf(1, 4),
-                            since = RelayPool.getAll().associate { it.url to EOSETime(oneHourAgoTimestamp) },
+                            since = RelayPool.getAll().associate { it.url to EOSETime(oneHourAgoMillis / 1000) },
+                        ),
+                ),
+            ),
+        )
+        Client.sendFilter(
+            subscriptionSyncPrivateId,
+            listOf(
+                TypedFilter(
+                    types = COMMON_FEED_TYPES,
+                    filter =
+                        SincePerRelayFilter(
+                            kinds = listOf(1059),
+                            since = RelayPool.getAll().associate { it.url to EOSETime(twoDaysAgoMillis / 1000) },
+                        ),
+                ),
+            ),
+        )
+        Client.sendFilter(
+            subscriptionSyncMetaId,
+            listOf(
+                TypedFilter(
+                    types = EVENT_FINDER_TYPES,
+                    filter =
+                        SincePerRelayFilter(
+                            kinds = listOf(0),
                         ),
                 ),
             ),
