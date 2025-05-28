@@ -17,8 +17,8 @@ android {
         applicationId = "com.koalasat.samiz"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "v0.0.4-alpha"
+        versionCode = 5
+        versionName = "v0.0.5-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

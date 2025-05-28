@@ -72,6 +72,8 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
           draft: true
+          body_path: release_notes.md
+          generate_release_notes: true
           prerelease: ${{ steps.regex-match.outputs.match != '' }}
       
       - name: Set asset_name
