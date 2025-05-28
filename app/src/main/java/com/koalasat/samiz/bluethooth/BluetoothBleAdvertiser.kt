@@ -7,6 +7,7 @@ import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
+import com.koalasat.samiz.model.Logger
 import java.io.Closeable
 import java.nio.ByteBuffer
 
@@ -46,7 +47,7 @@ class BluetoothBleAdvertiser(var context: Context, private var bluetoothBle: Blu
                 .setTimeout(0)
                 .build()
 
-        Log.d("BluetoothBleAdvertiser", "Start advertising")
+        Logger.d("BluetoothBleAdvertiser", "Start advertising")
         bluetoothBle.bluetoothManager.adapter.bluetoothLeAdvertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback)
     }
 
@@ -54,12 +55,12 @@ class BluetoothBleAdvertiser(var context: Context, private var bluetoothBle: Blu
         object : AdvertiseCallback() {
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
                 super.onStartSuccess(settingsInEffect)
-                Log.d("BluetoothBleAdvertiser", "Advertising started successfully")
+                Logger.d("BluetoothBleAdvertiser", "Advertising started successfully")
             }
 
             override fun onStartFailure(errorCode: Int) {
                 super.onStartFailure(errorCode)
-                Log.e("BluetoothBleAdvertiser", "Advertising failed with error: $errorCode")
+                Logger.e("BluetoothBleAdvertiser", "Advertising failed with error: $errorCode")
             }
         }
 }

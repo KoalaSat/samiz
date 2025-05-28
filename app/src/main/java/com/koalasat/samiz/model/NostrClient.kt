@@ -1,7 +1,6 @@
 package com.koalasat.samiz.model
 
 import android.content.Context
-import android.util.Log
 import com.koalasat.samiz.Samiz
 import com.koalasat.samiz.database.AppDatabase
 import com.koalasat.samiz.database.EventEntity
@@ -41,7 +40,7 @@ class NostrClient {
                     relay: Relay,
                     afterEOSE: Boolean,
                 ) {
-                    Log.d("NostrClient", "New local event received : ${event.id}")
+                    Logger.d("NostrClient", "New local event received : ${event.id.take(5)}...${event.id.takeLast(5)}")
                     val db = AppDatabase.getDatabase(context, "common")
                     val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 1)
                     db.applicationDao().insertEvent(eventEntity)
@@ -53,7 +52,7 @@ class NostrClient {
                     subscriptionId: String,
                     relay: Relay,
                 ) {
-                    Log.d("NostrClient", "Relay connection error : $error")
+                    Logger.d("NostrClient", "Relay connection error : $error")
                     Samiz.getInstance().relayError()
                 }
             }
@@ -62,10 +61,10 @@ class NostrClient {
 
         if (!Client.isSubscribed(clientNotificationListener)) Client.subscribe(clientNotificationListener)
 
-        Log.d("NostrClient", "Connecting to local relay")
+        Logger.d("NostrClient", "Connecting to local relay")
         connectRelays()
 
-        Log.d("NostrClient", "Sending request")
+        Logger.d("NostrClient", "Sending request")
         val currentTimeMillis = System.currentTimeMillis()
         val oneHourAgoMillis = currentTimeMillis - 3600000
         val twoDaysAgoMillis = currentTimeMillis - 172800000
@@ -157,7 +156,7 @@ class NostrClient {
     ) {
         CoroutineScope(Dispatchers.Default).launch {
             RelayPool.send(event)
-            Log.d("BluetoothReconciliation", "Nostr note published to local relay : ${event.id}")
+            Logger.d("BluetoothReconciliation", "Nostr note published to local relay : ${event.id.take(5)}...${event.id.takeLast(5)}")
             val db = AppDatabase.getDatabase(context, "common")
             val eventEntity = EventEntity(id = 0, eventId = event.id, createdAt = event.createdAt, local = 0)
             db.applicationDao().insertEvent(eventEntity)

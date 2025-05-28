@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.koalasat.samiz.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_logs"
+        android:name="com.koalasat.samiz.ui.logs.LogsFragment"
+        android:label="@string/title_logs"
+        tools:layout="@layout/fragment_logs" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.koalasat.samiz.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_help"
+        android:name="com.koalasat.samiz.ui.help.HelpFragment"
+        android:label="@string/title_help"
+        tools:layout="@layout/fragment_help" />
 </navigation>

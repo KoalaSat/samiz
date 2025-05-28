@@ -8,10 +8,10 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.koalasat.samiz.model.Logger
 import com.koalasat.samiz.service.SynchronizationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,7 @@ class Samiz : Application() {
     }
 
     fun startService() {
-        Log.d("Samiz", "Starting service...")
+        Logger.d("Samiz", "Starting service...")
         val serviceIntent = Intent(this, SynchronizationService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)

@@ -8,8 +8,8 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Context.BLUETOOTH_SERVICE
 import android.content.pm.PackageManager
-import android.util.Log
 import com.koalasat.samiz.Samiz
+import com.koalasat.samiz.model.Logger
 import java.io.Closeable
 import java.util.UUID
 import kotlin.collections.set
@@ -83,7 +83,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
             this,
             object : BluetoothBleClientCallback {
                 override fun onDisconnection(device: BluetoothDevice) {
-                    Log.d("BluetoothBle", "${device.address} - Disconnecting from server")
+                    Logger.d("BluetoothBle", "${device.address} - Disconnecting from server")
                     servers.remove(device.address)
                     deviceReadCharacteristic.remove(device.address)
                     deviceWriteCharacteristic.remove(device.address)
@@ -94,16 +94,16 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                     device: BluetoothDevice,
                     characteristics: BluetoothGattCharacteristic,
                 ) {
-                    Log.d("BluetoothBle", "${device.address} - Characteristic discovered")
+                    Logger.d("BluetoothBle", "${device.address} - Characteristic discovered")
                     servers[device.address] = device
                     if (characteristics.uuid == readCharacteristicUUID) {
                         deviceReadCharacteristic[device.address] = characteristics
-                        Log.d("BluetoothBle", "${device.address} - READ Characteristic discovered")
+                        Logger.d("BluetoothBle", "${device.address} - READ Characteristic discovered")
                     } else if (characteristics.uuid == writeCharacteristicUUID) {
                         deviceWriteCharacteristic[device.address] = characteristics
-                        Log.d("BluetoothBle", "${device.address} - WRITE Characteristic discovered")
+                        Logger.d("BluetoothBle", "${device.address} - WRITE Characteristic discovered")
                     } else {
-                        Log.d("BluetoothBle", "${device.address} - OTHER Characteristic discovered")
+                        Logger.d("BluetoothBle", "${device.address} - OTHER Characteristic discovered")
                     }
                 }
 
@@ -114,7 +114,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                         servers[device.address] = device
                         callback.onConnection(this@BluetoothBle, device)
                     } else {
-                        Log.e("BluetoothBle", "${device.address} - Missing characteristics")
+                        Logger.e("BluetoothBle", "${device.address} - Missing characteristics")
                     }
                 }
 
@@ -142,7 +142,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
             this,
             object : BluetoothBleServerCallback {
                 override fun onDisconnection(device: BluetoothDevice) {
-                    Log.d("BluetoothBle", "${device.address} - Disconnecting from client")
+                    Logger.d("BluetoothBle", "${device.address} - Disconnecting from client")
                     clients.remove(device.address)
                     deviceReadCharacteristic.remove(device.address)
                     deviceWriteCharacteristic.remove(device.address)
@@ -152,7 +152,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                     device: BluetoothDevice,
                     characteristics: BluetoothGattCharacteristic,
                 ): ByteArray? {
-                    Log.d("BluetoothBle", "${device.address} - READ request")
+                    Logger.d("BluetoothBle", "${device.address} - READ request")
                     clients[device.address] = device
                     return callback.onReadRequest(this@BluetoothBle, device)
                 }
@@ -162,7 +162,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                     characteristics: BluetoothGattCharacteristic,
                     message: ByteArray,
                 ) {
-                    Log.d("BluetoothBle", "${device.address} - WRITE request")
+                    Logger.d("BluetoothBle", "${device.address} - WRITE request")
                     clients[device.address] = device
                     return callback.onWriteRequest(this@BluetoothBle, device, message)
                 }
@@ -181,20 +181,20 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
                 bluetoothAdapter.bluetoothLeAdvertiser != null
 
         if (bluetoothAdapter == null) {
-            Log.e("BluetoothBle", "Bluetooth not supported on this device")
+            Logger.e("BluetoothBle", "Bluetooth not supported on this device")
             return
         } else if (!bluetoothAdapter.isEnabled) {
-            Log.e("BluetoothBle", "Bluetooth is not enabled")
+            Logger.e("BluetoothBle", "Bluetooth is not enabled")
             return
         } else {
-            Log.d("BluetoothBle", "Bluetooth is enabled")
+            Logger.d("BluetoothBle", "Bluetooth is enabled")
         }
 
         if (!canBeClient || !canBeServer) {
-            Log.e("BluetoothBle", "BLE is not enabled")
+            Logger.e("BluetoothBle", "BLE is not enabled")
             return
         } else {
-            Log.d("BluetoothBle", "Device supports BLE")
+            Logger.d("BluetoothBle", "Device supports BLE")
         }
 
         bluetoothBleServer.createGattServer()
@@ -211,17 +211,17 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
             bluetoothBleAdvertiser.close()
             bluetoothBleScanner.close()
         } catch (e: Exception) {
-            Log.e("BluetoothBle", "Exception while closing: ${e.message}")
+            Logger.e("BluetoothBle", "Exception while closing: ${e.message}")
         }
     }
 
     fun readMessage(device: BluetoothDevice) {
         val characteristic = deviceReadCharacteristic[device.address]
         if (characteristic != null) {
-            Log.d("BluetoothBle", "${device.address} - Sending read message")
+            Logger.d("BluetoothBle", "${device.address} - Sending read message")
             bluetoothBleClient.readCharacteristic(device, characteristic)
         } else {
-            Log.e("BluetoothBle", "${device.address} - Characteristic not found")
+            Logger.e("BluetoothBle", "${device.address} - Characteristic not found")
         }
     }
 
@@ -233,7 +233,7 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         if (characteristic != null) {
             bluetoothBleClient.sendWriteMessage(device, characteristic, message)
         } else {
-            Log.e("BluetoothBle", "${device.address} - Characteristic not found")
+            Logger.e("BluetoothBle", "${device.address} - Characteristic not found")
         }
     }
 
@@ -242,15 +242,15 @@ class BluetoothBle(var context: Context, private val callback: BluetoothBleCallb
         device: BluetoothDevice,
         remoteUuid: UUID?,
     ) {
-        Log.d("BluetoothBle", "${device.address} - Handling device role:")
+        Logger.d("BluetoothBle", "${device.address} - Handling device role:")
         if (!clients.contains(device.address) && !servers.contains(device.address)) {
             Samiz.updateFoundDevices(remoteUuid.toString())
             if (remoteUuid == null || remoteUuid > getDeviceUuid()) {
-                Log.d("BluetoothBle", "${device.address} - I AM CLIENT")
-                Log.d("BluetoothBle", "${device.address} - Connecting to device: ${device.address}")
+                Logger.d("BluetoothBle", "${device.address} - I AM CLIENT")
+                Logger.d("BluetoothBle", "${device.address} - Connecting to device: ${device.address}")
                 device.connectGatt(context, false, bluetoothBleClient.bluetoothGattCallback)
             } else {
-                Log.d("BluetoothBle", "${device.address} - I AM SERVER")
+                Logger.d("BluetoothBle", "${device.address} - I AM SERVER")
             }
         }
     }

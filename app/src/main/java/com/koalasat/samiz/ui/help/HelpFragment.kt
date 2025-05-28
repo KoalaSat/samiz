@@ -1,16 +1,15 @@
-package com.koalasat.samiz.ui.dashboard
+package com.koalasat.samiz.ui.help
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.koalasat.samiz.databinding.FragmentDashboardBinding
+import com.koalasat.samiz.databinding.FragmentHelpBinding
 
-class DashboardFragment : Fragment() {
-    private var _binding: FragmentDashboardBinding? = null
+class HelpFragment : Fragment() {
+    private var _binding: FragmentHelpBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -22,15 +21,11 @@ class DashboardFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View {
         val dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
+            ViewModelProvider(this).get(HelpViewModel::class.java)
 
-        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        _binding = FragmentHelpBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textDashboard
-        dashboardViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
         return root
     }
 
