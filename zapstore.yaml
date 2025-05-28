@@ -1,11 +1,17 @@
-samiz:
-  android:
-    identifier: com.koalasat.samiz
-    name: Samiz
-    description: Nostr pull notifications on Android. Receive live notifications for your nostr events and allow other apps to receive and interact with them.
-    repository: https://github.com/koalasat/samiz
-    license: MIT
-    artifacts:
-      - samiz-universal-v%v-alpha.apk
-      - samiz-arm64-v8a-v%v-alpha.apk
-      - samiz-armeabi-v7a-v%v-alpha.apk
+identifier: com.koalasat.samiz
+name: Samiz
+summary: BLE mesh for nostr notes when the internet is down.
+description: Create a Bluetooth mesh with your Android device and use Nostr without accessing the internet.
+release_repository: https://github.com/koalasat/samiz
+images:
+  - fastlane/metadata/en-US/images/phoneScreenshots/01.png
+  - fastlane/metadata/en-US/images/phoneScreenshots/02.png
+  - fastlane/metadata/en-US/images/phoneScreenshots/03.png
+  - fastlane/metadata/en-US/images/phoneScreenshots/04.png
+icon: fastlane/metadata/en-US/images/icon.png
+tags: android nostr bluetooth
+license: MIT
+remote_metadata:
+  - github
+assets: # for github
+  - samiz-universal-v\d+\.\d+\.\d+-\w+.apk 

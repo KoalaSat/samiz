@@ -1,0 +1,1 @@
+BLE mesh for nostr notes when the internet is down.
