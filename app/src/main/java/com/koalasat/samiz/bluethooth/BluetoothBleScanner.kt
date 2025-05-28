@@ -7,7 +7,7 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.os.ParcelUuid
-import android.util.Log
+import com.koalasat.samiz.model.Logger
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.util.UUID
@@ -57,18 +57,18 @@ class BluetoothBleScanner(private var bluetoothBle: BluetoothBle, private val ca
                     val key = result.device.address + remoteUuid
                     if (key in discovered) return
 
-                    Log.d("BluetoothBleScanner", "${result.device.address} - Service data found")
+                    Logger.d("BluetoothBleScanner", "${result.device.address} - Service data found")
                     discovered += key
 
                     callback.onDeviceFound(result.device, remoteUuid)
                 } else {
-                    Log.d("BluetoothBleScanner", "${result.device.address} - Service data not found")
+                    Logger.d("BluetoothBleScanner", "${result.device.address} - Service data not found")
                 }
             }
 
             override fun onScanFailed(errorCode: Int) {
                 super.onScanFailed(errorCode)
-                Log.e("BluetoothBleScanner", "Scan failed with error code: $errorCode")
+                Logger.e("BluetoothBleScanner", "Scan failed with error code: $errorCode")
             }
         }
 }

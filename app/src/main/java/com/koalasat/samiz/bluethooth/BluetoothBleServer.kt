@@ -8,7 +8,7 @@ import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattServer
 import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothGattService
-import android.util.Log
+import com.koalasat.samiz.model.Logger
 import com.koalasat.samiz.util.Compression.Companion.joinChunks
 import com.koalasat.samiz.util.Compression.Companion.splitInChunks
 import java.io.Closeable
@@ -44,7 +44,7 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
 
     @SuppressLint("MissingPermission")
     fun createGattServer() {
-        Log.d("BluetoothBleServer", "Creating GATT Server")
+        Logger.d("BluetoothBleServer", "Creating GATT Server")
         bluetoothGattServer =
             bluetoothBle.bluetoothManager.openGattServer(
                 bluetoothBle.context,
@@ -55,12 +55,12 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         newState: Int,
                     ) {
                         super.onConnectionStateChange(device, status, newState)
-                        Log.d("BluetoothBleClient", "${device?.address} - Connection state changed: status=$status newState=$newState")
+                        Logger.d("BluetoothBleClient", "${device?.address} - Connection state changed: status=$status newState=$newState")
                         if (device != null) {
                             val address = device.address
                             when (newState) {
                                 BluetoothGatt.STATE_DISCONNECTED -> {
-                                    Log.d("BluetoothBleClient", "$address - Disconnected from client")
+                                    Logger.d("BluetoothBleClient", "$address - Disconnected from client")
                                     callback.onDisconnection(device)
                                 }
                             }
@@ -72,9 +72,9 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         service: BluetoothGattService,
                     ) {
                         super.onServiceAdded(status, service)
-                        Log.d("BluetoothBleServer", "Service added ${service.uuid}")
+                        Logger.d("BluetoothBleServer", "Service added ${service.uuid}")
                         for (characteristic in service.characteristics) {
-                            Log.d(
+                            Logger.d(
                                 "BluetoothBleServer",
                                 "Characteristic: ${characteristic.uuid}, " +
                                     "Properties: ${characteristic.properties}, " +
@@ -93,7 +93,7 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                         if (characteristic.uuid.equals(bluetoothBle.readCharacteristicUUID)) {
                             sendReadMessage(device, characteristic, requestId)
                         } else {
-                            Log.e("BluetoothBleServer", "${device.address} - Read not permitted")
+                            Logger.e("BluetoothBleServer", "${device.address} - Read not permitted")
                             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_READ_NOT_PERMITTED, offset, null)
                         }
                     }
@@ -117,10 +117,10 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                             value,
                         )
                         if (bluetoothBle.descriptorUUID == descriptor?.uuid) {
-                            Log.d("BluetoothBleServer", "${device?.address} - Descriptor write success")
+                            Logger.d("BluetoothBleServer", "${device?.address} - Descriptor write success")
                             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null)
                         } else {
-                            Log.e("BluetoothBleServer", "${device?.address} - Wrong descriptor")
+                            Logger.e("BluetoothBleServer", "${device?.address} - Wrong descriptor")
                             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null)
                         }
                     }
@@ -143,8 +143,8 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
                             offset,
                             value,
                         )
-                        Log.d("BluetoothBleServer", "${device.address} - Write request : $value")
-                        Log.d("BluetoothBleServer", "${device.address} - Response needed $responseNeeded")
+                        Logger.d("BluetoothBleServer", "${device.address} - Write request")
+                        Logger.d("BluetoothBleServer", "${device.address} - Response needed $responseNeeded")
                         // Get the value of the characteristic
                         var message = processWriteMessage(device, value)
                         if (message != null) {
@@ -177,9 +177,9 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
             var message = callback.onReadRequest(device, characteristic)
             jsonBytes =
                 if (message != null) {
-                    Log.d("BluetoothBleServer", "${device.address} - Created read response : ${String(message)}")
+                    Logger.d("BluetoothBleServer", "${device.address} - Created read response")
                     var chunks = splitInChunks(message)
-                    Log.d("BluetoothBleServer", "${device.address} - Split into ${chunks.size} read chunks")
+                    Logger.d("BluetoothBleServer", "${device.address} - Split into ${chunks.size} read chunks")
                     chunks
                 } else {
                     emptyArray()
@@ -191,17 +191,17 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
             readMessages[device.address] = jsonBytes.copyOfRange(1, jsonBytes.size)
 
             val chunkIndex = nextChunk[0].toByte()
-            Log.d("BluetoothBleServer", "${device.address} - Sending read Chunk $chunkIndex")
+            Logger.d("BluetoothBleServer", "${device.address} - Sending read Chunk $chunkIndex")
 
             val isLastChunk = nextChunk[nextChunk.size - 1] == 1.toByte()
             if (isLastChunk) {
-                Log.d("BluetoothBleServer", "${device.address} - Last read chunk sent")
+                Logger.d("BluetoothBleServer", "${device.address} - Last read chunk sent")
                 readMessages.remove(device.address)
             }
 
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, nextChunk)
         } else {
-            Log.e("BluetoothBleServer", "${device.address} - Device not found")
+            Logger.e("BluetoothBleServer", "${device.address} - Device not found")
         }
     }
 
@@ -214,21 +214,21 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
         if (address != null) {
             val chunkIndex = message[0].toByte()
 
-            Log.d("BluetoothBleServer", "$address - Received write chunk $chunkIndex")
+            Logger.d("BluetoothBleServer", "$address - Received write chunk $chunkIndex")
             writeMessages[address] = writeMessages.getOrDefault(address, emptyArray()) + message
 
             val totalChunks = message[message.size - 1].toInt()
             var chunks = writeMessages.getOrDefault(address, emptyArray())
             if (totalChunks == chunks.size) {
-                Log.d("BluetoothBleServer", "$address - Last write chunk received")
+                Logger.d("BluetoothBleServer", "$address - Last write chunk received")
 
                 val decompressMessage = joinChunks(chunks)
-                Log.d("BluetoothBleServer", "$address - Received full write message")
+                Logger.d("BluetoothBleServer", "$address - Received full write message")
                 writeMessages.remove(address)
                 return decompressMessage
             }
         } else {
-            Log.e("BluetoothBleServer", "$address - Address not found")
+            Logger.e("BluetoothBleServer", "$address - Address not found")
         }
 
         return null
@@ -239,15 +239,15 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
         deviceReadCharacteristic.value = "HOLI".toByteArray()
         val success = bluetoothGattServer.notifyCharacteristicChanged(device, deviceReadCharacteristic, false)
         if (success) {
-            Log.d("BluetoothBleServer", "${device.address} - Notification successfully to send")
+            Logger.d("BluetoothBleServer", "${device.address} - Notification successfully to send")
         } else {
-            Log.e("BluetoothBleServer", "${device.address} - Notification failed to sent")
+            Logger.e("BluetoothBleServer", "${device.address} - Notification failed to sent")
         }
     }
 
     @SuppressLint("MissingPermission")
     private fun addCharacteristics() {
-        Log.d("BluetoothBleServer", "Creating GATT Service")
+        Logger.d("BluetoothBleServer", "Creating GATT Service")
         val service = BluetoothGattService(bluetoothBle.serviceUUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
         val readCharacteristic =
@@ -271,14 +271,14 @@ class BluetoothBleServer(private var bluetoothBle: BluetoothBle, private val cal
             )
         writeCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 
-        Log.d("BluetoothBleAdvertiser", "Adding service")
+        Logger.d("BluetoothBleAdvertiser", "Adding service")
         service.addCharacteristic(readCharacteristic)
         deviceReadCharacteristic = readCharacteristic
         service.addCharacteristic(writeCharacteristic)
         deviceWriteCharacteristic = writeCharacteristic
         val status = bluetoothGattServer.addService(service)
         if (!status) {
-            Log.e("BluetoothBleServer", "Failed to add service.")
+            Logger.e("BluetoothBleServer", "Failed to add service.")
         }
     }
 }

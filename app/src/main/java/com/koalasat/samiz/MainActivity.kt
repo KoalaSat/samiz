@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -24,6 +23,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.koalasat.samiz.databinding.ActivityMainBinding
+import com.koalasat.samiz.model.Logger
 import com.koalasat.samiz.service.BluetoothStateReceiver
 
 class MainActivity : AppCompatActivity() {
@@ -73,8 +73,8 @@ class MainActivity : AppCompatActivity() {
             AppBarConfiguration(
                 setOf(
                     R.id.navigation_home,
-                    R.id.navigation_dashboard,
-                    R.id.navigation_notifications,
+                    R.id.navigation_logs,
+                    R.id.navigation_help,
                 ),
             )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -108,10 +108,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             if (deniedPermissions.isNotEmpty()) {
-                Log.e("Samiz", "Permissions not granted : $deniedPermissions")
+                Logger.e("Samiz", "Permissions not granted : $deniedPermissions")
                 Toast.makeText(applicationContext, getString(R.string.permissions_required), Toast.LENGTH_SHORT).show()
             } else {
-                Log.e("Samiz", "Permissions granted")
+                Logger.e("Samiz", "Permissions granted")
             }
         }
     }
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
             if (resultCode == RESULT_OK) {
-                Log.d("Samiz", "Bluethooth enabled")
+                Logger.d("Samiz", "Bluethooth enabled")
             } else {
                 Toast.makeText(applicationContext, getString(R.string.bluethoot_not_enabled), Toast.LENGTH_SHORT).show()
             }
@@ -197,14 +197,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (permissionsToRequest.isNotEmpty()) {
-            Log.e("Samiz", "Permissions not granted: $permissionsToRequest")
+            Logger.e("Samiz", "Permissions not granted: $permissionsToRequest")
             ActivityCompat.requestPermissions(
                 this,
                 permissionsToRequest.toTypedArray(),
                 requestCodePermissions,
             )
         } else {
-            Log.d("Samiz", "Permissions already granted: API V${Build.VERSION.SDK_INT}")
+            Logger.d("Samiz", "Permissions already granted: API V${Build.VERSION.SDK_INT}")
         }
     }
 }
