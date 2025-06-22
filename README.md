@@ -23,6 +23,10 @@ Create a Bluetooth mesh with your Android device and use Nostr without accessing
 
 - Discussion: https://chachi.chat/groups.0xchat.com/Ofar1AYHvG12Y1jx
 
+## Community videos
+
+https://njump.me/nevent1qqsr5cztcmq5mvksz03vz4p5w22jvn8xc3g90w835rxdt0d5gcf52egpz4mhxue69uhkummnw3ezummcw3ezuer9wchsygqdj7l2u4nlemyuv460r3h0vynw495afxfvxxvw28q043fv2f62zspsgqqqqqqsyp5rkr
+
 ## Use cases
 ### Case A
 Alice sits in her garden and wants to post an update about her thoughts using a nostr note. However, Alice's internet connection is currently down, so she is unable to share her thoughts with her network:
