@@ -12,10 +12,10 @@ Create a Bluetooth mesh with your Android device and use Nostr without accessing
 <div align="center">
     <a href="https://github.com/ImranR98/Obtainium" target="_blank">
         <img src="./docs/obtainium.png" alt="Get it on Obtaininum" height="70" />
+    </a>    
+    <a src="https://github.com/zapstore/zapstore/releases" target="_blank">
+        <img src="./docs/zapstore.svg" alt="Get it on Zap.Store" height="70" />
     </a>
-<!--     <a src="https://github.com/zapstore/zapstore-cli" target="_blank">
-        <img src="./docs/obtainium.png alt="Get it on Zap.Store" height="70" />
-    </a> -->
     <a href="https://github.com/KoalaSat/samiz/releases" target="_blank">
         <img src="https://github.com/machiav3lli/oandbackupx/raw/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" alt="Get it on GitHub" height="70">
     </a>
