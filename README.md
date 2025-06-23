@@ -105,9 +105,8 @@ SERVER UUID > CLIENT UUID
 
 Because of the limitations of this technology, achieving HTTP-like behavior requires multiple key considerations:
 
-
 <div align="center">
-<img src="https://github.com/user-attachments/assets/9c5d0980-1b58-4078-86ef-17366091ef0d" width="600"/>
+    <img src="https://github.com/user-attachments/assets/728a6cf7-992f-4a1f-8aa8-cdb3cff85c48" width="600"/>
 </div>
 
 - *compressByteArray*: To minimize message size, the string is converted to a ByteArray and then compressed using Deflater.
@@ -129,7 +128,7 @@ The same behavior also applies to writing.
 Samiz uses BLE technology and [Negentropy](https://github.com/hoytech/strfry/blob/542552ab0f5234f808c52c21772b34f6f07bec65/docs/negentropy.md) to achieve lower battery consumption and maximum efficiency for device synchronization.
 
 <div align="center">
-<img src="https://github.com/user-attachments/assets/e51de501-6cea-4d1c-9828-c9275ab1a4f9" width="600"/>
+    <img src="https://github.com/user-attachments/assets/3b7c1fc6-fd7f-49af-972f-496b23f02429" width="600"/>
 </div>
 
 ## Mesh spread
