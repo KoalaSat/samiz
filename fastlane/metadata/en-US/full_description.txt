@@ -1,3 +1,4 @@
 <p> Create a Bluetooth mesh with your Android device and use Nostr without accessing the internet. </p>
 <p><br><b>Features:</b></p><ul>
 <li>Receive and send nostr notifications directly on your phone via Bluetooth.</li>
+</ul>
