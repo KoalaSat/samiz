@@ -1,4 +1,4 @@
-Pokey v0.0.5-alpha is now out! :rocket:
+Samiz v0.0.5-alpha is now out! :rocket:
 
 ## What's new
 ### Features

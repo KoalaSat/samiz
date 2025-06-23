@@ -1,13 +1,10 @@
-identifier: com.koalasat.samiz
 name: Samiz
 summary: BLE mesh for nostr notes when the internet is down.
 description: Create a Bluetooth mesh with your Android device and use Nostr without accessing the internet.
-release_repository: https://github.com/koalasat/samiz
+repository: https://github.com/koalasat/samiz
 images:
   - fastlane/metadata/en-US/images/phoneScreenshots/01.png
   - fastlane/metadata/en-US/images/phoneScreenshots/02.png
-  - fastlane/metadata/en-US/images/phoneScreenshots/03.png
-  - fastlane/metadata/en-US/images/phoneScreenshots/04.png
 icon: fastlane/metadata/en-US/images/icon.png
 tags: android nostr bluetooth
 license: MIT

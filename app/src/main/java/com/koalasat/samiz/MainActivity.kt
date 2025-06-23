@@ -84,8 +84,6 @@ class MainActivity : AppCompatActivity() {
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(bluetoothStateReceiver, filter)
 
-        enableBluetooth()
-        disableBatteryOptimizer()
         checkAndRequestPermissions()
     }
 
@@ -112,6 +110,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, getString(R.string.permissions_required), Toast.LENGTH_SHORT).show()
             } else {
                 Logger.e("Samiz", "Permissions granted")
+                setupPhone()
             }
         }
     }
@@ -135,6 +134,11 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         return navController.navigateUp(appBarConfiguration) ||
             super.onSupportNavigateUp()
+    }
+
+    private fun setupPhone() {
+        enableBluetooth()
+        disableBatteryOptimizer()
     }
 
     @SuppressLint("MissingPermission")
@@ -205,6 +209,7 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             Logger.d("Samiz", "Permissions already granted: API V${Build.VERSION.SDK_INT}")
+            setupPhone()
         }
     }
 }
