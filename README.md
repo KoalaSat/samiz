@@ -25,7 +25,9 @@ Create a Bluetooth mesh with your Android device and use Nostr without accessing
 
 ## Community videos
 
-1. [Offline Sync](https://njump.me/nevent1qqsr5cztcmq5mvksz03vz4p5w22jvn8xc3g90w835rxdt0d5gcf52egpz4mhxue69uhkummnw3ezummcw3ezuer9wchsygqdj7l2u4nlemyuv460r3h0vynw495afxfvxxvw28q043fv2f62zspsgqqqqqqsyp5rkr)
+1. Offline Sync
+
+https://github.com/user-attachments/assets/881e2f28-b9e4-4290-a844-e7c6910cb502
 
 ## Use cases
 ### Case A
