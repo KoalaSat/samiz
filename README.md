@@ -3,6 +3,7 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/KoalaSat/samiz/total?label=Downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/KoalaSat/samiz/releases)
 [![release](https://img.shields.io/github/v/release/KoalaSat/samiz)](https://github.com/KoalaSat/samiz/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/KoalaSat/samiz/blob/main/LICENSE)
+[![Nostr](https://img.shields.io/badge/chat-nostr-brightgreen)](https://chachi.chat/groups.0xchat.com/Ofar1AYHvG12Y1jx)
 
 Create a Bluetooth mesh with your Android device and use Nostr without accessing the internet.
 
@@ -20,8 +21,6 @@ Create a Bluetooth mesh with your Android device and use Nostr without accessing
         <img src="https://github.com/machiav3lli/oandbackupx/raw/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" alt="Get it on GitHub" height="70">
     </a>
 </div>
-
-- Discussion: https://chachi.chat/groups.0xchat.com/Ofar1AYHvG12Y1jx
 
 ## Community videos
 
