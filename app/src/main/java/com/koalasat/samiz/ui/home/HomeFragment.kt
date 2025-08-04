@@ -45,12 +45,12 @@ class HomeFragment : Fragment() {
                 }
 
             if (isEnabled) {
-                if (binding.logo.animation == null) {
+                if (binding.logoForeground.animation == null) {
                     val rotateAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.rotate_animation)
-                    binding.logo.startAnimation(rotateAnimation)
+                    binding.logoForeground.startAnimation(rotateAnimation)
                 }
             } else {
-                binding.logo.clearAnimation()
+                binding.logoForeground.clearAnimation()
             }
         }
 

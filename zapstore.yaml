@@ -11,4 +11,6 @@ license: MIT
 remote_metadata:
   - github
 assets: # for github
-  - samiz-universal-v\d+\.\d+\.\d+-\w+.apk 
+  - samiz-universal-v\d+\.\d+\.\d+-\w+.apk
+  - samiz-arm64-v8a-v\d+\.\d+\.\d+-\w+.apk
+  - samiz-armeabi-v7a-v\d+\.\d+\.\d+-\w+.apk
