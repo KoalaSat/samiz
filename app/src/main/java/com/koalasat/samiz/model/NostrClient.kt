@@ -4,6 +4,7 @@ import android.content.Context
 import com.koalasat.samiz.Samiz
 import com.koalasat.samiz.database.AppDatabase
 import com.koalasat.samiz.database.EventEntity
+import com.koalasat.samiz.util.AppSystem
 import com.vitorpamplona.ammolite.relays.COMMON_FEED_TYPES
 import com.vitorpamplona.ammolite.relays.Client
 import com.vitorpamplona.ammolite.relays.EVENT_FINDER_TYPES
@@ -12,6 +13,7 @@ import com.vitorpamplona.ammolite.relays.RelayPool
 import com.vitorpamplona.ammolite.relays.TypedFilter
 import com.vitorpamplona.ammolite.relays.filters.EOSETime
 import com.vitorpamplona.ammolite.relays.filters.SincePerRelayFilter
+import com.vitorpamplona.ammolite.service.HttpClientManager
 import com.vitorpamplona.quartz.events.Event
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +34,8 @@ class NostrClient {
         context: Context,
         onSyncEvent: (Event, Boolean) -> Unit,
     ) {
+        HttpClientManager.setDefaultUserAgent("pokey/${AppSystem.getAppVersion(context)} (Android)")
+
         clientNotificationListener =
             object : Client.Listener {
                 override fun onEvent(
