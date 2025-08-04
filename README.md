@@ -24,13 +24,13 @@ Create a Bluetooth mesh with your Android device and use Nostr without accessing
 
 ## Community videos
 
-1. Offline note broadcasting
-
-https://github-production-user-asset-6210df.s3.amazonaws.com/111684255/457815617-278a7054-8962-4679-a1b8-0c167d0bf39d.mp4
-
-2. Offline mesh spread
+1. Offline mesh spread
 
 https://github.com/user-attachments/assets/1b7a6e29-6312-4a9c-8e9b-23f8b826993d
+
+2. Offline note broadcasting
+
+https://github-production-user-asset-6210df.s3.amazonaws.com/111684255/457815617-278a7054-8962-4679-a1b8-0c167d0bf39d.mp4
 
 ## Use cases
 ### Case A
