@@ -1,6 +1,5 @@
 package com.koalasat.samiz.ui.help
 
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.koalasat.samiz.databinding.FragmentHelpBinding
+import com.koalasat.samiz.util.AppSystem
 
 class HelpFragment : Fragment() {
     private var _binding: FragmentHelpBinding? = null
@@ -33,13 +33,7 @@ class HelpFragment : Fragment() {
     }
 
     private fun getAppVersion(): String {
-        return try {
-            val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
-            packageInfo.versionName
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-            "N/A"
-        }.toString()
+        return AppSystem.getAppVersion(requireContext())
     }
 
     override fun onDestroyView() {
