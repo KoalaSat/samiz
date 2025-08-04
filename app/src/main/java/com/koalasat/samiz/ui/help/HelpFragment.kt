@@ -1,6 +1,5 @@
 package com.koalasat.samiz.ui.help
 
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
