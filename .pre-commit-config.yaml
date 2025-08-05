@@ -15,7 +15,7 @@ repos:
     hooks:
       - id: ktlint-check
         name: Run ktlintCheck
-        entry: ./gradlew ktlintFormat
+        entry: ./mobile/gradlew ktlintFormat
         language: system
         types: []  # This can be left empty if you want it to run for all file types
         pass_filenames: false

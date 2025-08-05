@@ -29,7 +29,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build APK
-        run: ./gradlew assembleRelease --stacktrace
+        run: ./mobile/gradlew assembleRelease --stacktrace
 
       - name: 'Check for non-FOSS libraries'
         run: |
@@ -43,12 +43,12 @@ jobs:
           # create an alias for ease of use
           chmod u+x repo/lib/radar/tool/apktool
           mv repo/lib/radar/tool/apktool_2.7.0.jar repo/lib/radar/tool/apktool.jar
-          repo/bin/scanapk.php app/build/outputs/apk/release/app-universal-release-unsigned.apk
+          repo/bin/scanapk.php mobile/app/build/outputs/apk/release/app-universal-release-unsigned.apk
 
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: app/build/outputs/apk/release
+          releaseDirectory: mobile/app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -73,7 +73,6 @@ jobs:
           release_name: ${{ github.ref }}
           draft: true
           body_path: release_notes.md
-          generate_release_notes: true
           prerelease: ${{ steps.regex-match.outputs.match != '' }}
 
       - name: Set asset_name
@@ -89,7 +88,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/release/app-universal-release-unsigned-signed.apk
+          asset_path: mobile/app/build/outputs/apk/release/app-universal-release-unsigned-signed.apk
           asset_name: samiz-universal-${{ steps.set_asset_name.outputs.asset_tag }}.apk
           asset_content_type: application/zip
 
@@ -100,7 +99,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk
+          asset_path: mobile/app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk
           asset_name: samiz-arm64-v8a-${{ steps.set_asset_name.outputs.asset_tag }}.apk
           asset_content_type: application/zip
 
@@ -111,6 +110,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk
+          asset_path: mobile/app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned-signed.apk
           asset_name: samiz-armeabi-v7a-${{ steps.set_asset_name.outputs.asset_tag }}.apk
           asset_content_type: application/zip
