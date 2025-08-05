@@ -1,0 +1,16 @@
+services:
+  samiz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: samiz:latest
+    container_name: samiz
+    restart: "no"
+    # Grant access to host's Bluetooth adapter
+    privileged: true
+    network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus:ro
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    # The container will run once and exit after scanning for Bluetooth devices
