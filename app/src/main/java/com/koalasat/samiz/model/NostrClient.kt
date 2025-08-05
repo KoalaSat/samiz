@@ -34,7 +34,7 @@ class NostrClient {
         context: Context,
         onSyncEvent: (Event, Boolean) -> Unit,
     ) {
-        HttpClientManager.setDefaultUserAgent("pokey/${AppSystem.getAppVersion(context)} (Android)")
+        HttpClientManager.setDefaultUserAgent("samiz/${AppSystem.getAppVersion(context)} (Android)")
 
         clientNotificationListener =
             object : Client.Listener {
