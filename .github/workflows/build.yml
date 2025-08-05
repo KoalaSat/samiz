@@ -32,17 +32,17 @@ jobs:
         run: touch keystore.properties
 
       - name: Linter (gradle)
-        run: ./gradlew ktlintCheck
+        run: ./mobile/gradlew ktlintCheck
 
       - name: Test (gradle)
-        run: ./gradlew test --no-daemon
+        run: ./mobile/gradlew test --no-daemon
 
       - name: Android Test Report
         uses: asadmansr/android-test-report-action@v1.2.0
         if: ${{ always() }} # IMPORTANT: run Android Test Report regardless
 
       - name: Build APK (gradle)
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./mobile/gradlew assembleDebug --no-daemon
 
       - name: 'Check for non-FOSS libraries'
         run: |
@@ -56,17 +56,17 @@ jobs:
           # create an alias for ease of use
           chmod u+x repo/lib/radar/tool/apktool
           mv repo/lib/radar/tool/apktool_2.7.0.jar repo/lib/radar/tool/apktool.jar
-          repo/bin/scanapk.php app/build/outputs/apk/debug/app-universal-debug.apk
+          repo/bin/scanapk.php mobile/app/build/outputs/apk/debug/app-universal-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Debug APK
-          path: app/build/outputs/apk/debug/app-universal-debug.apk
+          path: mobile/app/build/outputs/apk/debug/app-universal-debug.apk
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: Build Reports
-          path: app/build/reports
+          path: mobile/app/build/reports
 
