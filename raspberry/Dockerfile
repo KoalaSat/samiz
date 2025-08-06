@@ -1,6 +1,10 @@
 # Use Python slim image that supports ARM architecture for Raspberry Pi
 FROM python:3.9-slim
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 # Install system dependencies for Bluetooth
 RUN apt-get update && apt-get install -y \
     bluez \
@@ -10,15 +14,14 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
+# Copy the entire source code to container
+COPY . .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Python script to container
-COPY app.py .
+# Make the main script executable
+RUN chmod +x main.py
 
-# Make the script executable
-RUN chmod +x app.py
-
-# Set the default command to run the Python script
-CMD ["python3", "app.py"]
+# Set the default command to run the main Python script
+CMD ["python3", "main.py"]

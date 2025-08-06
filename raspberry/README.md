@@ -1,14 +1,6 @@
-# Raspberry Pi Docker Bluetooth Scanner
+# Samiz Raspberry Pi
 
-A Python application that runs in a Docker container and scans for nearby Bluetooth devices. Specifically designed for Raspberry Pi with Bluetooth capabilities.
-
-## Files
-
-- `app.py` - The main Python script that scans for Bluetooth devices
-- `Dockerfile` - Docker configuration optimized for Raspberry Pi with Bluetooth support
-- `docker-compose.yml` - Docker Compose configuration with Bluetooth permissions
-- `requirements.txt` - Python dependencies including Bleak for Bluetooth functionality
-- `README.md` - This documentation file
+A comprehensive Python service that runs in a Docker container and provides BLE (Bluetooth Low Energy) communication capabilities for data synchronization. This is a migration of the Kotlin BLE functionality to Python, designed specifically for Raspberry Pi deployment.
 
 ## Prerequisites
 
@@ -53,53 +45,6 @@ docker build -t samiz .
 docker run --rm samiz
 ```
 
-### Option 3: Run the Python script directly
-
-```bash
-# If you have Python installed directly on the Raspberry Pi
-python3 app.py
-```
-
-## Expected Output
-
-When you run the Docker container, you should see:
-
-```
-Bluetooth adapter detected and accessible.
-
-Scanning for Bluetooth devices...
-----------------------------------------
-Found 2 Bluetooth device(s):
-
-1. Device Name: My Phone
-   MAC Address: AA:BB:CC:DD:EE:FF
-   Signal Strength (RSSI): -45 dBm
-   Service UUIDs: 3 service(s)
-     - 0000180f-0000-1000-8000-00805f9b34fb
-     - 0000180a-0000-1000-8000-00805f9b34fb
-     - 0000fff0-0000-1000-8000-00805f9b34fb
-   Manufacturer Data: Available (1 entries)
-
-2. Device Name: Wireless Headphones
-   MAC Address: 11:22:33:44:55:66
-   Signal Strength (RSSI): -62 dBm
-   Service UUIDs: No services advertised
-   Manufacturer Data: Available (1 entries)
-
-----------------------------------------
-Bluetooth scan completed successfully!
-```
-
-## Bluetooth Functionality
-
-The application includes Bluetooth Low Energy (BLE) scanning capabilities using Bleak:
-
-- **Device Discovery**: Scans for nearby Bluetooth devices for 10 seconds
-- **Device Information**: Shows device names, MAC addresses, and signal strength (RSSI)
-- **Service Detection**: Displays advertised service UUIDs for each device
-- **Manufacturer Data**: Shows available manufacturer-specific data
-- **Adapter Check**: Verifies that a Bluetooth adapter is available and accessible
-
 ### Bluetooth Requirements
 
 For Bluetooth functionality to work properly:
@@ -143,24 +88,7 @@ For Bluetooth functionality to work properly:
 - Check if other Bluetooth applications are blocking access
 - Try running with sudo: `sudo docker compose up --build`
 
-**No devices found during scan**
-- Make sure nearby Bluetooth devices are discoverable
-- Check if devices are in pairing mode
-- Increase scan duration in the Python script if needed
-- Verify Bluetooth range (devices should be within ~10 meters)
-
 **Build fails when installing Bleak**
 - This usually indicates missing system dependencies
 - The Dockerfile should handle this, but ensure bluez is installed: `sudo apt-get install bluez`
 - Check that your system supports Bluetooth Low Energy (BLE)
-
-## Extending the Application
-
-To add more functionality:
-
-1. Modify `app.py` with your Python code
-2. Add any required dependencies to a `requirements.txt` file
-3. Update the Dockerfile to install dependencies:
-   ```dockerfile
-   COPY requirements.txt .
-   RUN pip install --no-cache-dir -r requirements.txt
