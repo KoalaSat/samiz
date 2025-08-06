@@ -1,0 +1,14 @@
+services:
+  samiz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: samiz
+    privileged: true
+    network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus:ro
+      - ./main.py:/app/main.py
+      - ./src:/app/src
+    devices:
+      - /dev/bus/usb:/dev/bus/usb

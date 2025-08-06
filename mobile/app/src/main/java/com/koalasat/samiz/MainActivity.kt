@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                 Logger.e("Samiz", "Permissions not granted : $deniedPermissions")
                 Toast.makeText(applicationContext, getString(R.string.permissions_required), Toast.LENGTH_SHORT).show()
             } else {
-                Logger.e("Samiz", "Permissions granted")
+                Logger.d("Samiz", "Permissions granted")
                 setupPhone()
             }
         }
