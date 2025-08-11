@@ -53,8 +53,9 @@ class BluetoothReconciliation(var context: Context) {
                     bluetoothBle: BluetoothBle,
                     device: BluetoothDevice,
                 ) {
-                    Logger.d("BluetoothReconciliation", "${device.address} - Generating negentropy init message")
+                    Logger.d("BluetoothReconciliation", "${device.address} - Generating negentropy vector")
                     generateNegentropy()
+                    Logger.d("BluetoothReconciliation", "${device.address} - Generating negentropy init message")
                     val msg = deviceNegentropy.initiate()
                     val negOpenMsg = negOpenMessage(device, msg)
                     Logger.d("BluetoothReconciliation", "${device.address} - Sending OPEN message")
@@ -66,7 +67,7 @@ class BluetoothReconciliation(var context: Context) {
                     device: BluetoothDevice,
                     message: ByteArray,
                 ) {
-                    var jsonArray: JSONArray = JSONArray()
+                    var jsonArray = JSONArray()
                     var type: String? = null
 
                     try {
@@ -172,7 +173,7 @@ class BluetoothReconciliation(var context: Context) {
                     device: BluetoothDevice,
                     message: ByteArray,
                 ) {
-                    var jsonArray: JSONArray = JSONArray()
+                    var jsonArray = JSONArray()
                     var type: String? = null
 
                     try {
@@ -228,12 +229,7 @@ class BluetoothReconciliation(var context: Context) {
                     bluetoothBle: BluetoothBle,
                     device: BluetoothDevice,
                 ) {
-                    val sendIds = deviceSendIds[device.address]
-                    if (sendIds != null && sendIds.isNotEmpty()) {
-                        sendHaveEvent(device, true)
-                    } else {
-                        bluetoothBle.readMessage(device)
-                    }
+                    bluetoothBle.readMessage(device)
                 }
 
                 override fun onCharacteristicChanged(
@@ -247,13 +243,13 @@ class BluetoothReconciliation(var context: Context) {
 
     private fun sendHaveEvent(
         device: BluetoothDevice,
-        read: Boolean,
+        followWorkflow: Boolean,
     ) {
         Logger.d("BluetoothReconciliation", "${device.address} - Checking for needed messages")
         var sendIds = deviceSendIds[device.address]
         if (sendIds != null) {
             if (sendIds.isNotEmpty()) {
-                val eventId = sendIds.last().toString()
+                val eventId = sendIds.last()
                 deviceSendIds[device.address] = sendIds.dropLast(1).toMutableList()
                 var event = getEvent(eventId)
                 if (event != null) {
@@ -263,11 +259,12 @@ class BluetoothReconciliation(var context: Context) {
                 }
             } else {
                 Logger.d("BluetoothReconciliation", "${device.address} - No more events to send")
-                if (read) bluetoothBle.readMessage(device)
             }
         } else {
             Logger.d("BluetoothReconciliation", "${device.address} - No more events to send")
         }
+
+        if (followWorkflow) writeEnd(device)
     }
 
     private fun writeEvent(
@@ -281,6 +278,20 @@ class BluetoothReconciliation(var context: Context) {
             bluetoothBle.writeMessage(device, message.toString().toByteArray())
             Samiz.updateSentEvents(Samiz.sentEvents.value?.plus(1) ?: 0)
             Logger.d("BluetoothReconciliation", "${device.address} - ${deviceSendIds[device.address]?.size} events left")
+            return
+        } catch (e: JSONException) {
+            Logger.d("BluetoothReconciliation", "${device.address} - invalid JSON sendHaveEvent: $e")
+        }
+    }
+
+    private fun writeEnd(
+        device: BluetoothDevice
+    ) {
+        try {
+            Logger.d("BluetoothReconciliation", "${device.address} - Sending EOSE")
+            val message = endMessage(device)
+            bluetoothBle.writeMessage(device, message.toString().toByteArray())
+            Samiz.updateSentEvents(Samiz.sentEvents.value?.plus(1) ?: 0)
             return
         } catch (e: JSONException) {
             Logger.d("BluetoothReconciliation", "${device.address} - invalid JSON sendHaveEvent: $e")

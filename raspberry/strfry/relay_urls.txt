@@ -1,0 +1,1 @@
+wss://nostr.satstralia.com

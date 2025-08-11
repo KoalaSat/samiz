@@ -29,7 +29,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build APK
-        run: ./mobile/gradlew assembleRelease --stacktrace
+        run: mobile/gradlew assembleRelease --stacktrace
 
       - name: 'Check for non-FOSS libraries'
         run: |
