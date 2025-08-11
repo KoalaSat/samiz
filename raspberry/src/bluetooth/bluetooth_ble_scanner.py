@@ -82,7 +82,6 @@ class BluetoothBleScanner:
                                 break
                     
                     if remote_uuid:
-                        Logger.d("BluetoothBleScanner", f"Found target device: {address}")
                         await self.callback.on_device_found(address, remote_uuid)
                 
                 # Wait before next scan cycle

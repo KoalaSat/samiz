@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: samiz
     privileged: true
     network_mode: host
     volumes:
@@ -13,3 +12,11 @@ services:
       - ./data:/app/data
     devices:
       - /dev/bus/usb:/dev/bus/usb
+  strfry:
+    build: ./strfry
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./strfry/strfry.conf:/etc/strfry.conf:ro
+      - ./strfry/relay_urls.txt:/app/relay_urls.txt:ro
+      - ./strfry/db:/app/strfry-db:rw

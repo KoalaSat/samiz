@@ -1,0 +1,5 @@
+# Ignore database files
+*.mdb
+
+# Keep the directory
+!.gitignore

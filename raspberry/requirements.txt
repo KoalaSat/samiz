@@ -4,4 +4,4 @@ bleak==0.21.1
 # Additional dependencies for the service
 asyncio-mqtt==0.16.2
 pydantic==2.5.2
-nostr-sdk==0.43.0
+nostr-sdk==0.42.1

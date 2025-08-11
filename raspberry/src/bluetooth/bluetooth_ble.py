@@ -190,10 +190,10 @@ class BluetoothBle:
             device_address: MAC address of the device
             remote_uuid: Optional UUID advertised by the device
         """
-        Logger.d("BluetoothBle", f"{device_address} - Handling device role")
-        
         if device_address in self.clients or device_address in self.servers:
             return
+
+        Logger.d("BluetoothBle", f"{device_address} - Handling device role")
         
         # Determine role based on UUID comparison (similar to Android logic)
         device_uuid = self.get_device_uuid()

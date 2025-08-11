@@ -6,14 +6,16 @@ Main orchestrator that handles BLE communication and data synchronization.
 import asyncio
 import json
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models.logger import Logger
 from bluetooth.bluetooth_ble import BluetoothBle
 from bluetooth.bluetooth_ble_callback import BluetoothBleCallback
 from utils.compression import Compression
+from utils.nostr import Nostr
 from negentropy import Negentropy, VectorStorage
 from database.sqlite_storage import SqliteStorage
+from nostr_sdk import Client, Event, Filter, Timestamp, Kind, KindStandard
 
 class BluetoothReconciliation(BluetoothBleCallback):
     """
@@ -37,8 +39,8 @@ class BluetoothReconciliation(BluetoothBleCallback):
         self.storage: Optional[SqliteStorage] = None
         self.db_name = "default"
         
-        # TODO: Add NostrClient when implementing Nostr functionality
-        # self.nostr_client = NostrClient()
+        # nostr Client
+        self.nostr_client = Client()
         
         Logger.d("BluetoothReconciliation", "BluetoothReconciliation initialized")
     
@@ -53,19 +55,25 @@ class BluetoothReconciliation(BluetoothBleCallback):
             Logger.d("BluetoothReconciliation", "Initializing database storage")
             self.storage = SqliteStorage(db_name=self.db_name)
             await self.storage.initialize()
+            self.storage.delete_all_events()
             
             # Initialize and start BLE service
             Logger.d("BluetoothReconciliation", "Starting BLE")
             self.bluetooth_ble = BluetoothBle(self)
             await self.bluetooth_ble.start()
+
+            # Start Nostr client
+            Logger.d("BluetoothReconciliation", "Starting nostr client")
+            await self.nostr_client.add_relay("ws://localhost:7777")
+            await self.nostr_client.connect()
+
+            Logger.d("BluetoothReconciliation", f"Synching with relay")
+            await self._sync_with_relay()
             
-            # Log database info for debugging
+            # Log database info
             db_info = self.storage.get_database_info()
             Logger.i("BluetoothReconciliation", f"Database ready: {db_info['event_count']} events stored")
-            
-            # TODO: Start Nostr client
-            Logger.d("BluetoothReconciliation", "Starting nostr client (not implemented yet)")
-            
+
             Logger.i("BluetoothReconciliation", "BluetoothReconciliation service started successfully")
             
         except Exception as e:
@@ -115,7 +123,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
 
         Logger.d("BluetoothReconciliation", f"{device_address} - Generated negentropy init message: {init_output}")
 
-        neg_open_msg = self._create_neg_open_message(device_address, init_output)
+        neg_open_msg = Nostr.create_neg_open_message(device_address, init_output)
         
         await bluetooth_ble.write_message(device_address, neg_open_msg)
     
@@ -166,7 +174,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
         if reconciliation:
             Logger.d("BluetoothReconciliation", f"{device_address} - Sending reconciliation messages")
             self.device_reconciliation.pop(device_address, None)
-            return self._create_neg_message(device_address, reconciliation)
+            return Nostr.create_neg_message(device_address, reconciliation)
         
         # Check if we have events to send
         need_ids = self.device_send_ids.get(device_address)
@@ -184,10 +192,10 @@ class BluetoothReconciliation(BluetoothBleCallback):
             Logger.d("BluetoothReconciliation", f"{device_address} - Generating missing event: {event_id[:5]}...{event_id[-5:]}")
             Logger.d("BluetoothReconciliation", f"{device_address} - {len(need_ids)} events left")
             
-            return self._create_event_message(device_address, event_json)
+            return Nostr.create_event_message(device_address, event_json)
         
         # No more data to send
-        return self._create_end_message(device_address)
+        return Nostr.create_end_message(device_address)
     
     async def on_write_request(self, bluetooth_ble, device_address: str, message: bytes) -> None:
         """
@@ -271,7 +279,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
         try:
             msg = json_array[2] if len(json_array) > 2 else None
             if msg and self.storage:
-                Logger.d("BluetoothReconciliation", f"{device_address} - Received missing nostr note: {msg}")
+                Logger.d("BluetoothReconciliation", f"{device_address} - Received missing nostr note")
                 json_event = json.loads(msg)
                 # Process and store the event in database
                 try:
@@ -279,12 +287,19 @@ class BluetoothReconciliation(BluetoothBleCallback):
                     event_id = json_event.get("id", "unknown")
                     created_at = json_event.get("created_at", 0)
                     
-                    # Store as external event (since it's received from another device)
+                    # Store as external event
                     result = self.storage.insert_event(event_id, created_at, is_local=False)
+
                     if result:
-                        Logger.d("BluetoothReconciliation", f"{device_address} - Stored event {event_id} in database")
+                        Logger.d("BluetoothReconciliation", f"{device_address} - Stored event in database")
+                        try:
+                            event = Event.from_json(msg)
+                            await self.nostr_client.send_event(event)
+                            Logger.d("BluetoothReconciliation", f"{device_address} - Event sent to relay")
+                        except Exception as e:
+                            Logger.e("BluetoothReconciliation", f"{device_address} - Error sending event to relay: {e}")
                     else:
-                        Logger.d("BluetoothReconciliation", f"{device_address} - Event {event_id} already exists in database")
+                        Logger.d("BluetoothReconciliation", f"{device_address} - Event already exists in database")
                             
                 except Exception as e:
                     Logger.e("BluetoothReconciliation", f"{device_address} - Error storing event: {e}")
@@ -360,7 +375,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
         Write an event to the device.
         """
         Logger.d("BluetoothReconciliation", f"{device_address} - Sending missing event")
-        message = self._create_event_message(device_address, event_json)
+        message = Nostr.create_event_message(device_address, event_json)
         await bluetooth_ble.write_message(device_address, message)
         
         # TODO: Update sent events counter
@@ -372,7 +387,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
         Write an event to the device.
         """
         Logger.d("BluetoothReconciliation", f"{device_address} - Sending EOSE")
-        message = self._create_end_message(device_address)
+        message = Nostr.create_end_message(device_address)
         await bluetooth_ble.write_message(device_address, message)
     
     async def _send_subscription_event(self, bluetooth_ble, device_address: str, need_ids: List[str]) -> None:
@@ -380,7 +395,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
         Send subscription request for needed events.
         """
         filters = {"ids": need_ids}
-        message = self._create_subscription_message(device_address, filters)
+        message = Nostr.create_subscription_message(device_address, filters)
         await bluetooth_ble.write_message(device_address, message)
     
     # Message creation helper methods
@@ -397,95 +412,22 @@ class BluetoothReconciliation(BluetoothBleCallback):
         self.negentropy[device_address] = Negentropy(vector)
 
         return self.negentropy[device_address].initiate()
-    
-    def _create_neg_open_message(self, device_address: str, msg: str) -> bytes:
-        """
-        Create a negentropy open message.
-        
-        Args:
-            device_address: MAC address of the device
-            msg: Initial negentropy message string
-            
-        Returns:
-            JSON bytes message
-        """
-        
-        json_array = [
-            "NEG-OPEN",  # type
-            device_address.replace(":", ""),  # subscription ID
-            "{}",  # nostr filters
-            msg  # initial message as hex string
-        ]
-        
-        return json.dumps(json_array).encode('utf-8')
-    
-    def _create_neg_message(self, device_address: str, msg: bytes) -> bytes:
-        """
-        Create a negentropy reconciliation message.
-        
-        Args:
-            device_address: MAC address of the device
-            msg: Reconciliation message bytes
-            
-        Returns:
-            JSON bytes message
-        """
-        json_array = [
-            "NEG-MSG",  # type
-            device_address.replace(":", ""),  # subscription ID
-            msg  # reconciliation message as hex string
-        ]
 
-        return json.dumps(json_array).encode('utf-8')
-    
-    def _create_event_message(self, device_address: str, event_json: str) -> bytes:
-        """
-        Create an event message.
-        
-        Args:
-            device_address: MAC address of the device
-            event_json: Event JSON string
-            
-        Returns:
-            JSON bytes message
-        """
-        json_array = [
-            "EVENT",  # type
-            device_address.replace(":", ""),  # subscription ID
-            event_json  # event data
-        ]
-        return json.dumps(json_array).encode('utf-8')
-    
-    def _create_subscription_message(self, device_address: str, filters: Dict[str, Any]) -> bytes:
-        """
-        Create a subscription request message.
-        
-        Args:
-            device_address: MAC address of the device
-            filters: Subscription filters
-            
-        Returns:
-            JSON bytes message
-        """
-        json_array = [
-            "REQ",  # type
-            device_address.replace(":", ""),  # subscription ID
-            json.dumps(filters)  # filters
-        ]
-        return json.dumps(json_array).encode('utf-8')
-    
-    def _create_end_message(self, device_address: str) -> bytes:
-        """
-        Create an end-of-stream message.
-        
-        Args:
-            device_address: MAC address of the device
-            
-        Returns:
-            JSON bytes message
-        """
-        json_array = [
-            "EOSE",  # type
-            device_address.replace(":", "")  # subscription ID
-        ]
-        return json.dumps(json_array).encode('utf-8')
+    async def _sync_with_relay(self) -> None:
+        one_hour_ago = Timestamp.from_secs(int((datetime.now() - timedelta(hours=1)).timestamp()))
+        two_days_ago = Timestamp.from_secs(int((datetime.now() - timedelta(hours=48)).timestamp()))
+
+        f_text = Filter().since(one_hour_ago)
+        events = await self.nostr_client.fetch_events(f_text, timedelta(seconds=10))
+        for event in events.to_vec():
+            self.storage.insert_event(event.id().to_hex(), event.created_at().as_secs(), True)
+
+        f_gift = Filter().since(two_days_ago).kind(Kind.from_std(KindStandard.GIFT_WRAP))
+        events = await self.nostr_client.fetch_events(f_gift, timedelta(seconds=10))
+        for event in events.to_vec():
+            self.storage.insert_event(event.id().to_hex(), event.created_at().as_secs(), True)
+
+        f_meta = Filter().kind(Kind.from_std(KindStandard.METADATA))
+        events = await self.nostr_client.fetch_events(f_meta, timedelta(seconds=10))
+        for event in events.to_vec():
+            self.storage.insert_event(event.id().to_hex(), event.created_at().as_secs(), True)
