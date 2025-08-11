@@ -10,5 +10,6 @@ services:
       - /var/run/dbus:/var/run/dbus:ro
       - ./main.py:/app/main.py
       - ./src:/app/src
+      - ./data:/app/data
     devices:
       - /dev/bus/usb:/dev/bus/usb

@@ -13,6 +13,7 @@ from bluetooth.bluetooth_ble import BluetoothBle
 from bluetooth.bluetooth_ble_callback import BluetoothBleCallback
 from utils.compression import Compression
 from negentropy import Negentropy, VectorStorage
+from database.sqlite_storage import SqliteStorage
 
 class BluetoothReconciliation(BluetoothBleCallback):
     """
@@ -25,14 +26,16 @@ class BluetoothReconciliation(BluetoothBleCallback):
         Initialize the BluetoothReconciliation service.
         """
         # Device tracking for reconciliation
+        self.negentropy: Dict[str, Negentorpy] = {}
         self.device_send_ids: Dict[str, List[str]] = {}
         self.device_reconciliation: Dict[str, bytes] = {}
         
         # BLE service
         self.bluetooth_ble: Optional[BluetoothBle] = None
         
-        # Service state
-        self._running = False
+        # Database storage
+        self.storage: Optional[SqliteStorage] = None
+        self.db_name = "default"
         
         # TODO: Add NostrClient when implementing Nostr functionality
         # self.nostr_client = NostrClient()
@@ -46,18 +49,23 @@ class BluetoothReconciliation(BluetoothBleCallback):
         try:
             Logger.d("BluetoothReconciliation", "Starting BluetoothReconciliation service")
             
+            # Initialize database storage
+            Logger.d("BluetoothReconciliation", "Initializing database storage")
+            self.storage = SqliteStorage(db_name=self.db_name)
+            await self.storage.initialize()
+            
             # Initialize and start BLE service
             Logger.d("BluetoothReconciliation", "Starting BLE")
             self.bluetooth_ble = BluetoothBle(self)
             await self.bluetooth_ble.start()
             
-            # TODO: Initialize database cleanup
-            Logger.d("BluetoothReconciliation", "Cleaning DB (not implemented yet)")
+            # Log database info for debugging
+            db_info = self.storage.get_database_info()
+            Logger.i("BluetoothReconciliation", f"Database ready: {db_info['event_count']} events stored")
             
             # TODO: Start Nostr client
             Logger.d("BluetoothReconciliation", "Starting nostr client (not implemented yet)")
             
-            self._running = True
             Logger.i("BluetoothReconciliation", "BluetoothReconciliation service started successfully")
             
         except Exception as e:
@@ -69,12 +77,16 @@ class BluetoothReconciliation(BluetoothBleCallback):
         Close the BluetoothReconciliation service and cleanup resources.
         """
         Logger.d("BluetoothReconciliation", "Closing BluetoothReconciliation service")
-        self._running = False
         
         try:
             # Close BLE service
             if self.bluetooth_ble:
                 await self.bluetooth_ble.close()
+            
+            # Close database storage
+            if self.storage:
+                await self.storage.cleanup()
+                self.storage = None
             
             # TODO: Close Nostr client when implemented
             
@@ -99,7 +111,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
         """
         Logger.d("BluetoothReconciliation", f"{device_address} - Generating negentropy vector")
         
-        init_output = self._generateNegentropy()
+        init_output = self._generateNegentropy(device_address)
 
         Logger.d("BluetoothReconciliation", f"{device_address} - Generated negentropy init message: {init_output}")
 
@@ -162,8 +174,13 @@ class BluetoothReconciliation(BluetoothBleCallback):
             Logger.d("BluetoothReconciliation", f"{device_address} - Checking needed event")
             event_id = need_ids.pop()  # Get last event
             
-            # TODO: Get actual event from database/storage
-            event_json = []
+            # Get event from database if available
+            event_json = "{}"  # Default empty event
+            if self.storage and self.storage.exists_event(event_id):
+                # For now, create a basic event structure
+                # TODO: Retrieve full event data from database when Nostr events are fully implemented
+                event_json = json.dumps({"id": event_id, "created_at": int(datetime.now().timestamp())})
+            
             Logger.d("BluetoothReconciliation", f"{device_address} - Generating missing event: {event_id[:5]}...{event_id[-5:]}")
             Logger.d("BluetoothReconciliation", f"{device_address} - {len(need_ids)} events left")
             
@@ -232,12 +249,14 @@ class BluetoothReconciliation(BluetoothBleCallback):
             hex_msg = json_array[2] if len(json_array) > 2 else None
             if hex_msg:
                 Logger.d("BluetoothReconciliation", f"{device_address} - Received negentropy reconciliation message: {hex_msg}")
-                
-                reconcile, send, need = self.negentropy.reconcile(hex_msg)
+                reconcile, send, need = self.negentropy[device_address].reconcile(hex_msg)
 
                 self.device_send_ids[device_address] = send
+
+                Logger.d("BluetoothReconciliation", f"{device_address} - Device wants {len(send)} events")
+                Logger.d("BluetoothReconciliation", f"{device_address} - Device has {len(need)} new events")
                 
-                await self._send_subscription_event(bluetooth_ble, device_address, send)
+                await self._send_subscription_event(bluetooth_ble, device_address, need)
             else:
                 Logger.e("BluetoothReconciliation", f"{device_address} - Bad formatted negentropy reconciliation message")
         except IndexError as e:
@@ -251,12 +270,27 @@ class BluetoothReconciliation(BluetoothBleCallback):
         """
         try:
             msg = json_array[2] if len(json_array) > 2 else None
-            if msg:
-                Logger.d("BluetoothReconciliation", f"{device_address} - Received missing nostr note")
-                # TODO: Process actual event and store in database
-                # TODO: Update received events counter
+            if msg and self.storage:
+                Logger.d("BluetoothReconciliation", f"{device_address} - Received missing nostr note: {msg}")
+                json_event = json.loads(msg)
+                # Process and store the event in database
+                try:
+                    # Parse the event (assuming it's a JSON object with id and created_at)
+                    event_id = json_event.get("id", "unknown")
+                    created_at = json_event.get("created_at", 0)
+                    
+                    # Store as external event (since it's received from another device)
+                    result = self.storage.insert_event(event_id, created_at, is_local=False)
+                    if result:
+                        Logger.d("BluetoothReconciliation", f"{device_address} - Stored event {event_id} in database")
+                    else:
+                        Logger.d("BluetoothReconciliation", f"{device_address} - Event {event_id} already exists in database")
+                            
+                except Exception as e:
+                    Logger.e("BluetoothReconciliation", f"{device_address} - Error storing event: {e}")
+                
                 await self._send_have_event(bluetooth_ble, device_address, True)
-        except IndexError as e:
+        except (json.JSONDecodeError, IndexError) as e:
             Logger.e("BluetoothReconciliation", f"{device_address} - Error parsing EVENT: {e}")
     
     async def _handle_neg_open(self, bluetooth_ble, device_address: str, json_array: List[Any]) -> None:
@@ -268,7 +302,7 @@ class BluetoothReconciliation(BluetoothBleCallback):
             
             hex_msg = json_array[3] if len(json_array) > 3 else None
             if hex_msg:
-                recontiliation = self._generateNegentropy()
+                recontiliation = self._generateNegentropy(device_address)
                 
                 self.device_reconciliation[device_address] = recontiliation
 
@@ -308,11 +342,18 @@ class BluetoothReconciliation(BluetoothBleCallback):
         if send_ids and len(send_ids) > 0:
             event_id = send_ids.pop()
             
-            # await self._write_event(bluetooth_ble, device_address, event_json) TODO
+            # Get event from database if available
+            event_json = "{}"  # Default empty event
+            if self.storage and self.storage.exists_event(event_id):
+                # For now, create a basic event structure
+                # TODO: Retrieve full event data from database when Nostr events are fully implemented
+                event_json = json.dumps({"id": event_id, "created_at": int(datetime.now().timestamp())})
+            
+            await self._write_event(bluetooth_ble, device_address, event_json)
         else:
             Logger.d("BluetoothReconciliation", f"{device_address} - No more events to send")
             if follow_workflow:
-                await bluetooth_ble._write_end(device_address)
+                await self._write_end(bluetooth_ble, device_address)
     
     async def _write_event(self, bluetooth_ble, device_address: str, event_json: str) -> None:
         """
@@ -344,11 +385,18 @@ class BluetoothReconciliation(BluetoothBleCallback):
     
     # Message creation helper methods
 
-    def _generateNegentropy(self) -> str:
-        storage = VectorStorage()
-        storage.seal()
-        self.negentropy = Negentropy(storage)
-        return self.negentropy.initiate()
+    def _generateNegentropy(self, device_address) -> str:
+        vector = VectorStorage()
+
+        events = self.storage.get_all_events()
+
+        for event in events:
+            vector.insert(event.created_at, event.event_id)
+
+        vector.seal()
+        self.negentropy[device_address] = Negentropy(vector)
+
+        return self.negentropy[device_address].initiate()
     
     def _create_neg_open_message(self, device_address: str, msg: str) -> bytes:
         """

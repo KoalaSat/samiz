@@ -202,7 +202,7 @@ class BluetoothBleClient:
             data: Notification data
         """
         Logger.d("BluetoothBleClient", f"{device_address} - Characteristic changed")
-        await self.callback.on_characteristic_changed(device_address)
+        # await self.callback.on_characteristic_changed(device_address) TODO
     
     async def read_characteristic(self, device_address: str) -> Optional[bytes]:
         """

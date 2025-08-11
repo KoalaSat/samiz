@@ -63,11 +63,28 @@ For Bluetooth functionality to work properly:
 3. **Host Network**: Uses host networking mode to access Bluetooth services
 4. **D-Bus Access**: Mounts D-Bus socket for system communication
 
+## Database Persistence
+
+The service uses SQLite for local data storage, with database files persisting on the host:
+
+- **Database Location**: `./data/` directory (mounted as volume in container)
+- **Database Files**: `samiz_db_<pubkey>.db` (plus WAL mode files)
+- **Persistence**: Database survives container restarts and rebuilds
+
+You can inspect the database directly:
+```bash
+# View database schema
+sqlite3 data/samiz_db_default.db ".schema"
+
+# Query stored events
+sqlite3 data/samiz_db_default.db "SELECT * FROM event;"
+```
+
 ## Raspberry Pi Specific Considerations
 
 - The Dockerfile uses `python:3.9-slim` which supports ARM architecture (required for Raspberry Pi)
 - The image is optimized for size and performance on resource-constrained devices
-- The `--rm` flag automatically removes the container after execution to save space
+- Database files are stored on the host filesystem for persistence and easy access
 
 ## Troubleshooting
 

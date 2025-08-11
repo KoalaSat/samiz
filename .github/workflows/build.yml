@@ -32,23 +32,17 @@ jobs:
         run: touch keystore.properties
 
       - name: Linter (gradle)
-        run: |
-          cd mobile
-          .gradlew ktlintCheck
+        run: mobile/gradlew ktlintCheck
 
       - name: Test (gradle)
-        run: |
-          cd mobile
-          ./gradlew test --no-daemon
+        run: mobile/gradlew test --no-daemon
 
       - name: Android Test Report
         uses: asadmansr/android-test-report-action@v1.2.0
         if: ${{ always() }} # IMPORTANT: run Android Test Report regardless
 
       - name: Build APK (gradle)
-        run: |
-          cd mobile
-          ./gradlew assembleDebug --no-daemon
+        run: mobile/gradlew assembleDebug --no-daemon
 
       - name: 'Check for non-FOSS libraries'
         run: |
